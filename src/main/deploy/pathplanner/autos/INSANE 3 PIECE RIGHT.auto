@@ -1,0 +1,121 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .0"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Align Left and L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "INSANE L4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .1"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.9
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Align Left and L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "INSANE L4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .3"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.7
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Align Right and L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "INSANE L4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .5"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.7
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "INSANE 3 PIECE Right .6"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Align Right and L4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "INSANE L4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": true
+}

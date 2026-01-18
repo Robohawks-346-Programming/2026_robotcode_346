@@ -1,0 +1,92 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "algae.0"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Align Left"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "algae.1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Algae Low"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "algae.2"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 0.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "algae.3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Algae Home"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "algae.4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Algae Score"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": true
+}
