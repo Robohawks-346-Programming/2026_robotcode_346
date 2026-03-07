@@ -7,37 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "algae.0"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Align Left"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L4"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "algae.1"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Algae Low"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "algae.2"
+            "pathName": "BottomTopOutpost1"
           }
         },
         {
@@ -45,15 +15,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "Intake"
+                  "pathName": "BottomTopOutpost2"
                 }
               },
               {
-                "type": "wait",
+                "type": "named",
                 "data": {
-                  "waitTime": 0.5
+                  "name": "Intake"
                 }
               }
             ]
@@ -62,25 +32,44 @@
         {
           "type": "path",
           "data": {
-            "pathName": "algae.3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Algae Home"
+            "pathName": "BottomTopOutpost3"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "algae.4"
+            "pathName": "BottomTopOutpost4"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Algae Score"
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "BottomOutpost5"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
           }
         }
       ]

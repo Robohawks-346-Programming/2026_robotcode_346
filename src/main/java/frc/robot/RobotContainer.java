@@ -2,9 +2,14 @@ package frc.robot;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -18,6 +23,9 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
+import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOReal;
+import frc.robot.subsystems.climb.climb;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOReal;
@@ -27,7 +35,6 @@ import frc.robot.subsystems.intakearm.IntakeArmIO;
 import frc.robot.subsystems.intakearm.IntakeArmIOReal;
 import frc.robot.subsystems.intakearm.IntakeArmIOSim;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterAutoMap;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -35,25 +42,27 @@ import frc.robot.subsystems.vision.*;
 
 public class RobotContainer {
 	private static final boolean DRIVE_ENABLED = true;
+	private static final double AUTO_INTAKE_EVENT_SECONDS = 5.0;
+	private static final double AUTO_SHOOT_EVENT_SECONDS = 5.0;
 
 	private final Drive drive;
 	private final VisionLocalizer vision;
 	private final Shooter shooter;
 	private final Intake intake;
 	private final IntakeArm intakeArm;
+	private final climb climbSubsystem;
 
 	private final CommandXboxController controller = new CommandXboxController(0);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
-	// Field-relative mode toggle (default: field-relative)
+	
 	private boolean useFieldRelative = true;
 
-	// Drive controls inversion toggle
 	private boolean controlsInverted = false;
 
 	public RobotContainer() {
-		// Create drive subsystem based on mode
+		
 		switch (Constants.currentMode) {
 			case REAL:
 				drive = new Drive(
@@ -105,11 +114,55 @@ public class RobotContainer {
 			default -> new IntakeArmIO() {};
 		};
 		intakeArm = new IntakeArm(intakeArmIO);
+
+		ClimbIO climbIO = switch (Constants.currentMode) {
+			case REAL -> new ClimbIOReal();
+			default -> new ClimbIO() {};
+		};
+		climbSubsystem = new climb(climbIO);
 		vision.setVisionConsumer(drive::addVisionMeasurement);
 
-		autoChooser = new LoggedDashboardChooser<>("Auto Choices");
+		configureAutoCommands();
+		autoChooser = createAutoChooserSafe();
 
 		configureButtonBindings();
+	}
+
+	private LoggedDashboardChooser<Command> createAutoChooserSafe() {
+		try {
+			return new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+		} catch (Exception e) {
+			DriverStation.reportError(
+					"Failed to load PathPlanner autos. Falling back to Do Nothing auto.\n" + e.getMessage(),
+					e.getStackTrace());
+			SendableChooser<Command> fallbackChooser = new SendableChooser<>();
+			fallbackChooser.setDefaultOption("Do Nothing", Commands.none());
+			return new LoggedDashboardChooser<>("Auto Choices", fallbackChooser);
+		}
+	}
+
+	private void configureAutoCommands() {
+		NamedCommands.registerCommand("Intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
+		// Alias for lowercase marker names in Choreo/PathPlanner.
+		NamedCommands.registerCommand("intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
+		NamedCommands.registerCommand("Shoot", autoShootEventCommand());
+		NamedCommands.registerCommand("shoot", autoShootEventCommand());
+		NamedCommands.registerCommand("Climb", climbSubsystem.moveOneOutputRevolutionCommand());
+		NamedCommands.registerCommand("climb", climbSubsystem.moveOneOutputRevolutionCommand());
+		NamedCommands.registerCommand("ClimbUp", climbSubsystem.moveOneOutputRevolutionCommand());
+		NamedCommands.registerCommand("climbup", climbSubsystem.moveOneOutputRevolutionCommand());
+	}
+
+	private Command autoShootEventCommand() {
+		
+		return Commands.deadline(
+				Commands.waitSeconds(AUTO_SHOOT_EVENT_SECONDS),
+				shooter.runShoot(),
+				Commands.run(drive::stop))
+				.finallyDo(interrupted -> {
+					shooter.stop();
+					drive.stop();
+				});
 	}
 
 	/**
@@ -120,7 +173,7 @@ public class RobotContainer {
 			return new VisionLocalizer(
 					drive::addVisionMeasurement,
 					drive::getPose,
-					// FL camera commented out - not installed IRL
+					// FL camera commented out it is not installed in irl
 					// new VisionIOPhotonReal(VisionConstants.cameraNames[0], VisionConstants.vehicleToCameras[0]),
 					new VisionIOPhotonReal(VisionConstants.cameraNames[1], VisionConstants.vehicleToCameras[1]),
 					new VisionIOPhotonReal(VisionConstants.cameraNames[2], VisionConstants.vehicleToCameras[2]),
@@ -129,7 +182,7 @@ public class RobotContainer {
 			return new VisionLocalizer(
 					drive::addVisionMeasurement,
 					drive::getPose,
-					// FL camera commented out - not installed IRL
+					// FL camera commented out  not installed IRL
 					// new VisionIOPhotonSim(VisionConstants.cameraNames[0], VisionConstants.vehicleToCameras[0], drive::getPose),
 					new VisionIOPhotonSim(VisionConstants.cameraNames[1], VisionConstants.vehicleToCameras[1], drive::getPose),
 					new VisionIOPhotonSim(VisionConstants.cameraNames[2], VisionConstants.vehicleToCameras[2], drive::getPose),
@@ -141,7 +194,7 @@ public class RobotContainer {
 
 	private void configureButtonBindings() {
 		if (DRIVE_ENABLED) {
-			// Default command: field-relative drive; LT = aim at target (right stick disabled while aiming)
+		
 			drive.setDefaultCommand(
 					AkitDriveCommands.joystickDriveWithAim(
 							drive,
@@ -149,14 +202,14 @@ public class RobotContainer {
 							() -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
 							() -> controlsInverted ? controller.getRightX() : -controller.getRightX(),
 							() -> useFieldRelative,
-							() -> controller.leftTrigger().getAsBoolean(),
+							() -> false,
 							AIM_TARGET));
 		} else {
-			// Temporary drive disable for testing other mechanisms.
+			
 			drive.setDefaultCommand(Commands.run(drive::stop, drive));
 		}
 
-		// Toggle drive controls inversion on X button
+		// Toggle drive controls inversion with X 
 		controller.x().onTrue(
 				Commands.runOnce(
 						() -> {
@@ -164,7 +217,7 @@ public class RobotContainer {
 							System.out.println("Drive controls: " + (controlsInverted ? "INVERTED" : "NORMAL"));
 						}));
 
-		// Toggle field-relative mode on B button
+		// Toggle field relative mode with B 
 		controller.b().onTrue(
 				Commands.runOnce(
 						() -> {
@@ -172,7 +225,7 @@ public class RobotContainer {
 							System.out.println("Drive mode: " + (useFieldRelative ? "FIELD-RELATIVE" : "ROBOT-RELATIVE"));
 						}));
 
-		// Reset robot heading on A button press
+		// Reset robot heading on A 
 		controller.a().onTrue(
 				Commands.runOnce(
 						() -> {
@@ -182,7 +235,7 @@ public class RobotContainer {
 						drive)
 						.ignoringDisable(true));
 
-		// Zero gyro heading on START button press
+		
 		controller.start().onTrue(
 				Commands.runOnce(
 						() -> {
@@ -192,7 +245,7 @@ public class RobotContainer {
 						drive)
 						.ignoringDisable(true));
 
-		// Reset pose (position and heading) on right bumper
+		// Reset pose
 		controller.rightBumper().onTrue(
 				Commands.runOnce(
 						() -> drive.setPose(
@@ -200,21 +253,26 @@ public class RobotContainer {
 						drive)
 						.ignoringDisable(true));
 
-		// Shooter: hold Y for distance-based auto shoot, stop on release
+		// Shooter: hold Y to run intake wheels, stop on release
 		controller.y()
-				.whileTrue(shooter.runAutoShoot(
-						() -> ShooterAutoMap.getDistanceFeet(drive.getPose(), AIM_TARGET)))
+				.whileTrue(shooter.runShoot())
 				.onFalse(shooter.stopCoralIntake());
 
-		// Intake: hold left bumper to run motor, stop on release
+		
 		controller.leftBumper()
 				.whileTrue(intake.runIntake())
 				.onFalse(intake.stopIntake());
 
-		// Intake arm position control using absolute encoder
-		// D-pad down: move arm to 72 deg down, D-pad up: move arm fully up
-		controller.povDown().onTrue(intakeArm.moveDownCommand());
-		controller.povUp().onTrue(intakeArm.moveUpCommand());
+		
+		controller.povDown()
+				.whileTrue(intakeArm.jogDownCommand())
+				.onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
+		controller.povUp()
+				.whileTrue(intakeArm.jogUpCommand())
+				.onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
+		
+		controller.rightTrigger().onTrue(climbSubsystem.moveOneOutputRevolutionCommand()); 
+		controller.leftTrigger().onTrue(climbSubsystem.moveOneOutputRevolutionDownCommand());
 	}
 
 	public Command getAutonomousCommand() {
@@ -243,5 +301,9 @@ public class RobotContainer {
 
 	public IntakeArm getIntakeArm() {
 		return intakeArm;
+	}
+
+	public climb getClimb() {
+		return climbSubsystem;
 	}
 }

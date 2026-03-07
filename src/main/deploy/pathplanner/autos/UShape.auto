@@ -7,49 +7,56 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right.0"
+            "pathName": "UShape_1"
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "Align Left"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L4"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "right.1"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.9
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "UShape_2"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "right.2"
+            "pathName": "UShape_3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UShape_4"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Align Left"
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "UShape_5"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "L4"
+            "name": "Climb"
           }
         }
       ]

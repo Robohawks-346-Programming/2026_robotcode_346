@@ -12,6 +12,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
@@ -43,6 +44,9 @@ public class IntakeArmIOReal implements IntakeArmIO {
 		tryUntilOk(5, () -> armMotor.getConfigurator().apply(motorConfig, 0.25));
 
 		CANcoderConfiguration encoderConfig = new CANcoderConfiguration();
+		encoderConfig.MagnetSensor.SensorDirection = IntakeArmConstants.ARM_CANCODER_CCW_POSITIVE
+				? SensorDirectionValue.CounterClockwise_Positive
+				: SensorDirectionValue.Clockwise_Positive;
 		tryUntilOk(5, () -> armEncoder.getConfigurator().apply(encoderConfig, 0.25));
 	}
 
@@ -61,14 +65,33 @@ public class IntakeArmIOReal implements IntakeArmIO {
 		inputs.connectedEncoder = BaseStatusSignal.refreshAll(encoderAbsoluteRot).isOK();
 		inputs.connectedMotor = BaseStatusSignal.refreshAll(motorVolts, motorCurrent).isOK();
 
-		double absoluteAngleDeg = encoderAbsoluteRot.getValueAsDouble() * 360.0 * IntakeArmConstants.ARM_DIRECTION;
+		// Safety: never drive the arm closed-loop without a valid absolute encoder reading.
+		if (!inputs.connectedEncoder) {
+			armMotor.setControl(neutralOut);
+			inputs.absoluteAngleDeg = 0.0;
+			inputs.targetAngleDeg = targetAngleDeg;
+			inputs.appliedVolts = motorVolts.getValueAsDouble();
+			inputs.currentAmps = motorCurrent.getValueAsDouble();
+			inputs.appliedPercent = 0.0;
+			return;
+		}
+
+		double relativeRotations = encoderAbsoluteRot.getValueAsDouble() - IntakeArmConstants.ARM_UP_REFERENCE_ROT;
+		double absoluteAngleDeg = MathUtil.inputModulus(
+				relativeRotations * 360.0 * IntakeArmConstants.ARM_DIRECTION,
+				-180.0,
+				180.0);
 		double errorDeg = MathUtil.inputModulus(targetAngleDeg - absoluteAngleDeg, -180.0, 180.0);
 
-		double output = errorDeg * IntakeArmConstants.ARM_KP;
-		output = MathUtil.clamp(output, -IntakeArmConstants.ARM_MAX_OUTPUT, IntakeArmConstants.ARM_MAX_OUTPUT);
-
+		double output;
 		if (Math.abs(errorDeg) <= IntakeArmConstants.ARM_ANGLE_TOLERANCE_DEG) {
 			output = 0.0;
+		} else {
+			output = errorDeg * IntakeArmConstants.ARM_KP;
+			output = MathUtil.clamp(output, -IntakeArmConstants.ARM_MAX_OUTPUT, IntakeArmConstants.ARM_MAX_OUTPUT);
+			if (Math.abs(output) < IntakeArmConstants.ARM_MIN_MOVING_OUTPUT) {
+				output = Math.copySign(IntakeArmConstants.ARM_MIN_MOVING_OUTPUT, output);
+			}
 		}
 
 		armMotor.setControl(dutyCycleOut.withOutput(output));

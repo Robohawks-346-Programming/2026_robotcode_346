@@ -7,49 +7,50 @@
         {
           "type": "path",
           "data": {
-            "pathName": "left.0"
+            "pathName": "Bottom_Path1"
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "Align Left"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L4"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "left.1"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.9
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Bottom_Path2"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "left.2"
+            "pathName": "Bottom_Path3"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Align Left"
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Bottom_Path4"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "L4"
+            "name": "Climb"
           }
         }
       ]

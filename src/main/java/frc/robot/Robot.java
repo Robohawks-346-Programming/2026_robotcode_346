@@ -16,6 +16,8 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -30,6 +32,8 @@ public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
 
 	private final RobotContainer m_robotContainer;
+	private AddressableLED led;
+	private AddressableLEDBuffer ledBuffer;
 
 	/**
 	 * This function is run when the robot is first started up and should be used
@@ -75,6 +79,22 @@ public class Robot extends LoggedRobot {
 	@Override
 	public void robotInit() {
 		// Vision simulation removed - using real vision system
+		if (Constants.LedTestConstants.ENABLED) {
+			led = new AddressableLED(Constants.LedTestConstants.PWM_PORT);
+			ledBuffer = new AddressableLEDBuffer(Constants.LedTestConstants.LED_COUNT);
+
+			for (int i = 0; i < ledBuffer.getLength(); i++) {
+				ledBuffer.setRGB(
+						i,
+						Constants.LedTestConstants.RED,
+						Constants.LedTestConstants.GREEN,
+						Constants.LedTestConstants.BLUE);
+			}
+
+			led.setLength(ledBuffer.getLength());
+			led.setData(ledBuffer);
+			led.start();
+		}
 	}
 
 	/**
@@ -89,6 +109,10 @@ public class Robot extends LoggedRobot {
 	 */
 	@Override
 	public void robotPeriodic() {
+		if (led != null && ledBuffer != null) {
+			led.setData(ledBuffer);
+		}
+
 		// Runs the Scheduler. This is responsible for polling buttons, adding
 		// newly-scheduled
 		// commands, running already-scheduled commands, removing finished or

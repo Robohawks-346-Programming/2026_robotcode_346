@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
+	private static final double FIXED_SHOOT_RPM = 6000.0;
+
 	private final ShooterIO io;
 	private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
@@ -52,42 +54,31 @@ public class Shooter extends SubsystemBase {
 		double target2Rps = rpmToRps(target2InchRpm);
 		double target3Rps = rpmToRps(target3InchRpm);
 
-		double twoInch1Error = Math.abs(inputs.velocity2Inch1Rps - (target2Rps * ShooterConstants.TALON_2_INCH_1_DIR));
-		double twoInch2Error = Math.abs(inputs.velocity2Inch2Rps - (target2Rps * ShooterConstants.TALON_2_INCH_2_DIR));
+		double twoInchError = Math.abs(inputs.velocity2InchRps - (target2Rps * ShooterConstants.TALON_2_INCH_DIR));
 		double threeInch1Error = Math.abs(inputs.velocity3Inch1Rps - (target3Rps * ShooterConstants.TALON_3_INCH_1_DIR));
 		double threeInch2Error = Math.abs(inputs.velocity3Inch2Rps - (target3Rps * ShooterConstants.TALON_3_INCH_2_DIR));
 
-		return twoInch1Error <= ShooterConstants.SPEED_TOLERANCE_RPS
-				&& twoInch2Error <= ShooterConstants.SPEED_TOLERANCE_RPS
+		return twoInchError <= ShooterConstants.SPEED_TOLERANCE_RPS
 				&& threeInch1Error <= ShooterConstants.SPEED_TOLERANCE_RPS
 				&& threeInch2Error <= ShooterConstants.SPEED_TOLERANCE_RPS;
 	}
 
 	public Command runShoot() {
-		return Commands.sequence(
-				Commands.runOnce(
-						() -> setTargets(
-								0.0,
-								0.0,
-								0.0,
-								ShooterConstants.ROLLER_SPEED_PERCENT),
-						this),
-				Commands.waitSeconds(ShooterConstants.SHOOT_DELAY_SECONDS),
-				Commands.run(
-						() -> setTargets(
-								ShooterConstants.TALON_2_INCH_TARGET_RPM,
-								ShooterConstants.TALON_3_INCH_TARGET_RPM,
-								ShooterConstants.NEO_550_SPEED_PERCENT,
-								ShooterConstants.ROLLER_SPEED_PERCENT),
-						this));
+		return Commands.run(
+				() -> setTargets(
+						FIXED_SHOOT_RPM,
+						FIXED_SHOOT_RPM,
+						ShooterConstants.NEO_550_SPEED_PERCENT,
+						ShooterConstants.ROLLER_SPEED_PERCENT),
+				this);
 	}
 
 	public void setAutoTargetsFromDistanceFeet(double distanceFeet) {
 		autoDistanceFeet = distanceFeet;
-		autoThreeInchPercent = ShooterAutoMap.getThreeInchPercent(distanceFeet);
+		autoThreeInchPercent = 0.0;
 		setTargets(
-				ShooterAutoMap.getTwoInchRpm(distanceFeet),
-				ShooterAutoMap.getThreeInchRpm(distanceFeet),
+				FIXED_SHOOT_RPM,
+				FIXED_SHOOT_RPM,
 				ShooterConstants.NEO_550_SPEED_PERCENT,
 				ShooterConstants.ROLLER_SPEED_PERCENT);
 	}

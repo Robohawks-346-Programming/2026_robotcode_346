@@ -22,33 +22,28 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.drive.TunerConstants;
 
 public class ShooterIOReal implements ShooterIO {
-	private final TalonFX talon2Inch1 = new TalonFX(ShooterConstants.TALON_2_INCH_1_ID, TunerConstants.DrivetrainConstants.CANBusName);
-	private final TalonFX talon2Inch2 = new TalonFX(ShooterConstants.TALON_2_INCH_2_ID, TunerConstants.DrivetrainConstants.CANBusName);
+	private final TalonFX talon2Inch = new TalonFX(ShooterConstants.TALON_2_INCH_ID, TunerConstants.DrivetrainConstants.CANBusName);
 	private final TalonFX talon3Inch1 = new TalonFX(ShooterConstants.TALON_3_INCH_1_ID, TunerConstants.DrivetrainConstants.CANBusName);
 	private final TalonFX talon3Inch2 = new TalonFX(ShooterConstants.TALON_3_INCH_2_ID, TunerConstants.DrivetrainConstants.CANBusName);
-	private final TalonFX roller = new TalonFX(ShooterConstants.ROLLER_ID, TunerConstants.DrivetrainConstants.CANBusName);
+	private final TalonFX roller = new TalonFX(ShooterConstants.FEEDER_ROLLER_ID, TunerConstants.DrivetrainConstants.CANBusName);
 	private final TalonFXS neo550 = new TalonFXS(ShooterConstants.NEO_550_ID, TunerConstants.DrivetrainConstants.CANBusName);
 
-	private final VelocityVoltage velReq2Inch1 = new VelocityVoltage(0.0).withSlot(0);
-	private final VelocityVoltage velReq2Inch2 = new VelocityVoltage(0.0).withSlot(0);
+	private final VelocityVoltage velReq2Inch = new VelocityVoltage(0.0).withSlot(0);
 	private final VelocityVoltage velReq3Inch1 = new VelocityVoltage(0.0).withSlot(0);
 	private final VelocityVoltage velReq3Inch2 = new VelocityVoltage(0.0).withSlot(0);
 	private final DutyCycleOut rollerDutyCycleOut = new DutyCycleOut(0.0);
 	private final NeutralOut neutral = new NeutralOut();
 
-	private final StatusSignal<AngularVelocity> vel2Inch1 = talon2Inch1.getVelocity();
-	private final StatusSignal<AngularVelocity> vel2Inch2 = talon2Inch2.getVelocity();
+	private final StatusSignal<AngularVelocity> vel2Inch = talon2Inch.getVelocity();
 	private final StatusSignal<AngularVelocity> vel3Inch1 = talon3Inch1.getVelocity();
 	private final StatusSignal<AngularVelocity> vel3Inch2 = talon3Inch2.getVelocity();
 
-	private final StatusSignal<Voltage> volts2Inch1 = talon2Inch1.getMotorVoltage();
-	private final StatusSignal<Voltage> volts2Inch2 = talon2Inch2.getMotorVoltage();
+	private final StatusSignal<Voltage> volts2Inch = talon2Inch.getMotorVoltage();
 	private final StatusSignal<Voltage> volts3Inch1 = talon3Inch1.getMotorVoltage();
 	private final StatusSignal<Voltage> volts3Inch2 = talon3Inch2.getMotorVoltage();
 	private final StatusSignal<Voltage> voltsRoller = roller.getMotorVoltage();
 
-	private final StatusSignal<Current> amps2Inch1 = talon2Inch1.getStatorCurrent();
-	private final StatusSignal<Current> amps2Inch2 = talon2Inch2.getStatorCurrent();
+	private final StatusSignal<Current> amps2Inch = talon2Inch.getStatorCurrent();
 	private final StatusSignal<Current> amps3Inch1 = talon3Inch1.getStatorCurrent();
 	private final StatusSignal<Current> amps3Inch2 = talon3Inch2.getStatorCurrent();
 	private final StatusSignal<Current> ampsRoller = roller.getStatorCurrent();
@@ -69,8 +64,7 @@ public class ShooterIOReal implements ShooterIO {
 		config.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.0;
 		config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.0;
 
-		tryUntilOk(5, () -> talon2Inch1.getConfigurator().apply(config, 0.25));
-		tryUntilOk(5, () -> talon2Inch2.getConfigurator().apply(config, 0.25));
+		tryUntilOk(5, () -> talon2Inch.getConfigurator().apply(config, 0.25));
 		tryUntilOk(5, () -> talon3Inch1.getConfigurator().apply(config, 0.25));
 		tryUntilOk(5, () -> talon3Inch2.getConfigurator().apply(config, 0.25));
 		tryUntilOk(5, () -> roller.getConfigurator().apply(config, 0.25));
@@ -93,20 +87,18 @@ public class ShooterIOReal implements ShooterIO {
 		double target2InchRps = rpmToRps(twoInchRpm);
 		double target3InchRps = rpmToRps(threeInchRpm);
 
-		talon2Inch1.setControl(velReq2Inch1.withVelocity(target2InchRps * ShooterConstants.TALON_2_INCH_1_DIR));
-		talon2Inch2.setControl(velReq2Inch2.withVelocity(target2InchRps * ShooterConstants.TALON_2_INCH_2_DIR));
+		talon2Inch.setControl(velReq2Inch.withVelocity(target2InchRps * ShooterConstants.TALON_2_INCH_DIR));
 		talon3Inch1.setControl(velReq3Inch1.withVelocity(target3InchRps * ShooterConstants.TALON_3_INCH_1_DIR));
 		talon3Inch2.setControl(velReq3Inch2.withVelocity(target3InchRps * ShooterConstants.TALON_3_INCH_2_DIR));
 
 		neo550.set(neoPercent / 100.0);
-		double rollerOutput = (MathUtil.clamp(rollerPercent, -100.0, 100.0) / 100.0) * ShooterConstants.ROLLER_DIR;
+		double rollerOutput = (MathUtil.clamp(rollerPercent, -100.0, 100.0) / 100.0) * ShooterConstants.FEEDER_ROLLER_DIR;
 		roller.setControl(rollerDutyCycleOut.withOutput(rollerOutput));
 	}
 
 	@Override
 	public void stop() {
-		talon2Inch1.setControl(neutral);
-		talon2Inch2.setControl(neutral);
+		talon2Inch.setControl(neutral);
 		talon3Inch1.setControl(neutral);
 		talon3Inch2.setControl(neutral);
 		roller.setControl(neutral);
@@ -115,26 +107,22 @@ public class ShooterIOReal implements ShooterIO {
 
 	@Override
 	public void updateInputs(ShooterIOInputs inputs) {
-		inputs.connected2Inch1 = BaseStatusSignal.refreshAll(vel2Inch1, volts2Inch1, amps2Inch1).isOK();
-		inputs.connected2Inch2 = BaseStatusSignal.refreshAll(vel2Inch2, volts2Inch2, amps2Inch2).isOK();
+		inputs.connected2Inch = BaseStatusSignal.refreshAll(vel2Inch, volts2Inch, amps2Inch).isOK();
 		inputs.connected3Inch1 = BaseStatusSignal.refreshAll(vel3Inch1, volts3Inch1, amps3Inch1).isOK();
 		inputs.connected3Inch2 = BaseStatusSignal.refreshAll(vel3Inch2, volts3Inch2, amps3Inch2).isOK();
 		inputs.connectedRoller = BaseStatusSignal.refreshAll(voltsRoller, ampsRoller).isOK();
 		inputs.connectedNeo550 = true;
 
-		inputs.velocity2Inch1Rps = vel2Inch1.getValueAsDouble();
-		inputs.velocity2Inch2Rps = vel2Inch2.getValueAsDouble();
+		inputs.velocity2InchRps = vel2Inch.getValueAsDouble();
 		inputs.velocity3Inch1Rps = vel3Inch1.getValueAsDouble();
 		inputs.velocity3Inch2Rps = vel3Inch2.getValueAsDouble();
 
-		inputs.appliedVolts2Inch1 = volts2Inch1.getValueAsDouble();
-		inputs.appliedVolts2Inch2 = volts2Inch2.getValueAsDouble();
+		inputs.appliedVolts2Inch = volts2Inch.getValueAsDouble();
 		inputs.appliedVolts3Inch1 = volts3Inch1.getValueAsDouble();
 		inputs.appliedVolts3Inch2 = volts3Inch2.getValueAsDouble();
 		inputs.appliedVoltsRoller = voltsRoller.getValueAsDouble();
 
-		inputs.currentAmps2Inch1 = amps2Inch1.getValueAsDouble();
-		inputs.currentAmps2Inch2 = amps2Inch2.getValueAsDouble();
+		inputs.currentAmps2Inch = amps2Inch.getValueAsDouble();
 		inputs.currentAmps3Inch1 = amps3Inch1.getValueAsDouble();
 		inputs.currentAmps3Inch2 = amps3Inch2.getValueAsDouble();
 		inputs.currentAmpsRoller = ampsRoller.getValueAsDouble();

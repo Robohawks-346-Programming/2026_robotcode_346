@@ -19,14 +19,22 @@ public final class Constants {
 	public static final Mode simMode = Mode.SIM;
 	public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+	public static final class LedTestConstants {
+		public static final boolean ENABLED = true;
+		public static final int PWM_PORT = 0;
+		public static final int LED_COUNT = 60;
+		public static final int RED = 40;
+		public static final int BLUE = 40;
+		public static final int GREEN = 40;
+	}
+	
+
 	public static enum Mode {
-		/** Running on a real robot. */
+		
 		REAL,
 
-		/** Running a physics simulator. */
 		SIM,
 
-		/** Replaying from a log file. */
 		REPLAY
 	}
 

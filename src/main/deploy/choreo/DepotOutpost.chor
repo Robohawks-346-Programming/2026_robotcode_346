@@ -1,6 +1,6 @@
 {
- "name":"2025",
- "version":1,
+ "name":"DepotOutpost",
+ "version":2,
  "type":"Swerve",
  "variables":{
   "expressions":{},
@@ -74,5 +74,11 @@
    "val":0.5588
   }
  },
- "generationFeatures":[]
+ "generationFeatures":[],
+ "codegen":{
+  "root":"..\\C:\\Users\\User\\Downloads\\2026_robotcode_346\\src\\main\\deploy\\choreo",
+  "genVars":true,
+  "genTrajData":true,
+  "useChoreoLib":true
+ }
 }
