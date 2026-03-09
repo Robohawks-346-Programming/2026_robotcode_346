@@ -8,6 +8,8 @@ public interface IntakeArmIO {
 		public boolean connectedMotor = false;
 		public boolean connectedEncoder = false;
 
+		public double encoderAbsoluteRot = 0.0;
+		public double encoderAbsoluteDeg = 0.0;
 		public double absoluteAngleDeg = 0.0;
 		public double targetAngleDeg = 0.0;
 		public double appliedVolts = 0.0;

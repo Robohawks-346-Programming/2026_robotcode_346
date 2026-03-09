@@ -33,6 +33,7 @@ public class IntakeIOReal implements IntakeIO {
 		config.CurrentLimits.SupplyCurrentLimit = IntakeConstants.INTAKE_SUPPLY_CURRENT_LIMIT_A;
 		config.CurrentLimits.StatorCurrentLimitEnable = true;
 		config.CurrentLimits.StatorCurrentLimit = IntakeConstants.INTAKE_STATOR_CURRENT_LIMIT_A;
+		config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = IntakeConstants.INTAKE_OPEN_LOOP_RAMP_SECONDS;
 		tryUntilOk(5, () -> intakeMotor.getConfigurator().apply(config, 0.25));
 	}
 

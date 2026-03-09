@@ -4,7 +4,7 @@ public final class ShooterConstants {
 	private ShooterConstants() {
 	}
 
-	// CAN ID layout (non-drive devices)
+	
 	// Shooter: 51-55
 	public static final int TALON_2_INCH_ID = 51;
 	public static final int TALON_3_INCH_1_ID = 52;

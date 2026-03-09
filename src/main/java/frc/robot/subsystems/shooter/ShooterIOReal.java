@@ -71,6 +71,7 @@ public class ShooterIOReal implements ShooterIO {
 
 		TalonFXSConfiguration neoConfig = new TalonFXSConfiguration();
 		neoConfig.Commutation.MotorArrangement = MotorArrangementValue.NEO550_JST;
+		neoConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 		neoConfig.CurrentLimits.StatorCurrentLimit = 25.0;
 		neoConfig.CurrentLimits.StatorCurrentLimitEnable = true;
 		neoConfig.CurrentLimits.SupplyCurrentLimit = 20.0;

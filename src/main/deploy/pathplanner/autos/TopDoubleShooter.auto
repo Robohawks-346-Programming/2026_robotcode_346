@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "TopPath1"
+            "pathName": "TopDoubleShoot1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "TopPath2"
+            "pathName": "TopDoubleShoot2"
           }
         },
         {
@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "TopPath3"
+                  "pathName": "TopDoubleShoot3"
                 }
               },
               {
@@ -36,6 +36,12 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "TopDoubleShoot4"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "Shoot"
@@ -44,7 +50,32 @@
         {
           "type": "path",
           "data": {
-            "pathName": "TopPath4"
+            "pathName": "TopDoubleShoot5"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "TopDoubleShoot6"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "TopDoubleShoot7"
           }
         }
       ]

@@ -20,6 +20,8 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
 		inputs.connectedMotor = true;
 		inputs.connectedEncoder = true;
+		inputs.encoderAbsoluteRot = simAngleDeg / 360.0;
+		inputs.encoderAbsoluteDeg = simAngleDeg;
 		inputs.absoluteAngleDeg = simAngleDeg;
 		inputs.targetAngleDeg = targetAngleDeg;
 		inputs.appliedPercent = outputPercent;

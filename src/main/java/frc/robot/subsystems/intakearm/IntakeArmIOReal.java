@@ -64,6 +64,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
 	public void updateInputs(IntakeArmIOInputs inputs) {
 		inputs.connectedEncoder = BaseStatusSignal.refreshAll(encoderAbsoluteRot).isOK();
 		inputs.connectedMotor = BaseStatusSignal.refreshAll(motorVolts, motorCurrent).isOK();
+		inputs.encoderAbsoluteRot = encoderAbsoluteRot.getValueAsDouble();
+		inputs.encoderAbsoluteDeg = inputs.encoderAbsoluteRot * 360.0;
 
 		// Safety: never drive the arm closed-loop without a valid absolute encoder reading.
 		if (!inputs.connectedEncoder) {
@@ -76,7 +78,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
 			return;
 		}
 
-		double relativeRotations = encoderAbsoluteRot.getValueAsDouble() - IntakeArmConstants.ARM_UP_REFERENCE_ROT;
+		double relativeRotations = inputs.encoderAbsoluteRot - IntakeArmConstants.ARM_UP_REFERENCE_ROT;
 		double absoluteAngleDeg = MathUtil.inputModulus(
 				relativeRotations * 360.0 * IntakeArmConstants.ARM_DIRECTION,
 				-180.0,

@@ -100,10 +100,11 @@ public class IntakeArm extends SubsystemBase {
 		Logger.processInputs("IntakeArm", inputs);
 
 		// Latch the current measured angle on startup so the arm holds where it is
-		// instead of jumping to a preset immediately.
+		// instead of jumping to a preset immediately. Keep IDLE so it does not
+		// actively drive unless commanded by operator input.
 		if (!startupTargetLatched && inputs.connectedEncoder) {
 			targetAngleDeg = inputs.absoluteAngleDeg;
-			state = IntakeArmState.HOLDING;
+			state = IntakeArmState.IDLE;
 			startupTargetLatched = true;
 		}
 
@@ -120,5 +121,8 @@ public class IntakeArm extends SubsystemBase {
 
 		Logger.recordOutput("IntakeArm/State", state.toString());
 		Logger.recordOutput("IntakeArm/TargetAngleDeg", targetAngleDeg);
+		Logger.recordOutput("Tuning/IntakeArm/AbsRotRaw", inputs.encoderAbsoluteRot);
+		Logger.recordOutput("Tuning/IntakeArm/AbsDegRaw", inputs.encoderAbsoluteDeg);
+		Logger.recordOutput("Tuning/IntakeArm/AbsDegAdjusted", inputs.absoluteAngleDeg);
 	}
 }
