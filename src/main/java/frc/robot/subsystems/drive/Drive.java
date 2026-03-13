@@ -221,23 +221,6 @@ public class Drive extends SubsystemBase {
 		}
 		odometryLock.unlock();
 
-		// Stop moving when disabled
-		if (DriverStation.isDisabled()) {
-			for (var module : modules) {
-				module.stop();
-			}
-			// Allow next enable to re-snap to first vision pose
-			hasReceivedVisionMeasurement = false;
-			smoothedChassisSpeeds = new ChassisSpeeds();
-			return; // Don't process any commands when disabled
-		}
-
-		// Log empty setpoint states when disabled
-		if (DriverStation.isDisabled()) {
-			Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
-			Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
-		}
-
 		// Update odometry
 		double[] sampleTimestamps = modules[0].getOdometryTimestamps(); // All signals are sampled together
 		int sampleCount = sampleTimestamps.length;
@@ -285,6 +268,23 @@ public class Drive extends SubsystemBase {
 		Logger.recordOutput("Odometry/Robot", robotPose);
 		Logger.recordOutput("RobotPose2d", robotPose);
 		Logger.recordOutput("RobotPose3d", new Pose3d(robotPose));
+<<<<<<< HEAD
+=======
+		field2d.setRobotPose(robotPose);
+
+		// Stop moving when disabled (but keep pose updates so the field still renders)
+		if (DriverStation.isDisabled()) {
+			for (var module : modules) {
+				module.stop();
+			}
+			// Allow next enable to re-snap to first vision pose
+			hasReceivedVisionMeasurement = false;
+			smoothedChassisSpeeds = new ChassisSpeeds();
+			Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
+			Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
+			return; // Don't process any commands when disabled
+		}
+>>>>>>> b7fabbeea419cf4d01a350e5a6e23ca5996069e5
 	}
 
 	/**
