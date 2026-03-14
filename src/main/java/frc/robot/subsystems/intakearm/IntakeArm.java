@@ -57,6 +57,8 @@ public class IntakeArm extends SubsystemBase {
 		state = IntakeArmState.MOVING_DOWN;
 	}
 
+	
+
 	public void jogUpStep() {
 		double signedStep = IntakeArmConstants.ARM_JOG_STEP_DEG
 				* Math.signum(IntakeArmConstants.ARM_DOWN_ANGLE_DEG - IntakeArmConstants.ARM_UP_ANGLE_DEG);
@@ -116,6 +118,7 @@ public class IntakeArm extends SubsystemBase {
 	public Command moveDownCommand() {
 		return Commands.runOnce(this::moveDown, this);
 	}
+
 
 	public Command jogUpCommand() {
 		return IntakeArmConstants.ARM_TUNING_MODE

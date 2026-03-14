@@ -12,11 +12,11 @@ public final class ShooterConstants {
 	public static final int FEEDER_ROLLER_ID = 54;
 	public static final int NEO_550_ID = 55;
 
-	public static final double TALON_2_INCH_TARGET_RPM = 5500.0; 
-	public static final double TALON_3_INCH_TARGET_RPM = 3850.0;
-	public static final double NEO_550_SPEED_PERCENT = 75.0;
-	public static final double ROLLER_SPEED_PERCENT = 75.0;
-	public static final double SHOOT_DELAY_SECONDS = 1.0;
+	public static final double TALON_2_INCH_TARGET_RPM = 4260.0; 
+	public static final double TALON_3_INCH_TARGET_RPM = 3120.0;
+	public static final double NEO_550_SPEED_PERCENT = 100.0;
+	public static final double ROLLER_SPEED_PERCENT = 100.0;
+	public static final double SHOOT_DELAY_SECONDS = 0.5;
 
 	public static final double TALON_2_INCH_DIR = 1.0;
 	public static final double TALON_3_INCH_1_DIR = 1.0;
@@ -34,4 +34,15 @@ public final class ShooterConstants {
 	public static final double SPEED_TOLERANCE_RPS = 5.0;
 	public static final double SHOOTER_SUPPLY_CURRENT_LIMIT_A = 80.0;
 	public static final double SHOOTER_STATOR_CURRENT_LIMIT_A = 160.0;
+
+
+
+
+	//speeds
+	public static final double TALON_2_INCH_TARGET_RPM_6ft = 4560; 
+	public static final double TALON_3_INCH_TARGET_RPM_6ft = 3360.0;
+	public static final double TALON_2_INCH_TARGET_RPM_7ft = 4848.0; 
+	public static final double TALON_3_INCH_TARGET_RPM_7ft = 3566.0;
+	public static final double TALON_2_INCH_TARGET_RPM_8ft = 5160; 
+	public static final double TALON_3_INCH_TARGET_RPM_8ft = 3720;
 }

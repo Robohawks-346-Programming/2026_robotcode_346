@@ -40,6 +40,7 @@ import frc.robot.subsystems.intakearm.IntakeArmIO;
 import frc.robot.subsystems.intakearm.IntakeArmIOReal;
 import frc.robot.subsystems.intakearm.IntakeArmIOSim;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterAutoMap;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
@@ -59,6 +60,7 @@ public class RobotContainer {
 	private final Intake intake;
 	private final IntakeArm intakeArm;
 	private final climb climbSubsystem;
+	private final ShooterAutoMap autoMap;
 
 	private final CommandXboxController controller = new CommandXboxController(0);
 	private final Joystick operatorControl = new Joystick(Constants.OperatorConstants.OPERATOR_CONTROLLER_PORT);
@@ -129,6 +131,7 @@ public class RobotContainer {
 			default -> new ShooterIO() {};
 		};
 		shooter = new Shooter(shooterIO);
+		autoMap = new ShooterAutoMap();
 
 		IntakeIO intakeIO = switch (Constants.currentMode) {
 			case REAL -> new IntakeIOReal();
@@ -230,8 +233,13 @@ public class RobotContainer {
 		}
 		return BLUE_AIM_TARGET;
 	}
+
+	private double getAutoShootDistanceFeet() {
+		return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAimTargetForAlliance());
+	}
 	private Command stagedShootCommand() {
 		return Commands.sequence(
+				
 				Commands.run(
 						() -> shooter.setTargets(
 								ShooterConstants.TALON_2_INCH_TARGET_RPM,
@@ -249,6 +257,47 @@ public class RobotContainer {
 				shooter.runShoot())
 				.finallyDo(interrupted -> shooter.stop());
 	}
+	private Command stagedShootCommand6ft() {
+		return Commands.sequence(
+				
+				Commands.run(
+						() -> shooter.setTargets(
+								ShooterConstants.TALON_2_INCH_TARGET_RPM_6ft,
+								ShooterConstants.TALON_3_INCH_TARGET_RPM_6ft,
+								0.0,
+								0.0),
+						shooter).withTimeout(SHOOT_STAGE1_SECONDS),
+				Commands.run(
+						() -> shooter.setTargets(
+								ShooterConstants.TALON_2_INCH_TARGET_RPM_6ft,
+								ShooterConstants.TALON_3_INCH_TARGET_RPM_6ft,
+								ShooterConstants.NEO_550_SPEED_PERCENT,
+								ShooterConstants.ROLLER_SPEED_PERCENT),
+						shooter).withTimeout(SHOOT_STAGE2_SECONDS),
+				shooter.runShoot())
+				.finallyDo(interrupted -> shooter.stop());
+	}
+
+	private Command stagedShootCommand7ft() {
+		return Commands.sequence(
+				
+				Commands.run(
+						() -> shooter.setTargets(
+								ShooterConstants.TALON_2_INCH_TARGET_RPM_7ft,
+								ShooterConstants.TALON_3_INCH_TARGET_RPM_7ft,
+								0.0,
+								0.0),
+						shooter).withTimeout(SHOOT_STAGE1_SECONDS),
+				Commands.run(
+						() -> shooter.setTargets(
+								ShooterConstants.TALON_2_INCH_TARGET_RPM_7ft,
+								ShooterConstants.TALON_3_INCH_TARGET_RPM_7ft,
+								ShooterConstants.NEO_550_SPEED_PERCENT,
+								ShooterConstants.ROLLER_SPEED_PERCENT),
+						shooter).withTimeout(SHOOT_STAGE2_SECONDS),
+				shooter.runShoot())
+				.finallyDo(interrupted -> shooter.stop());
+	}
 
 	private void configureButtonBindings() {
 		if (DRIVE_ENABLED) {
@@ -259,17 +308,11 @@ public class RobotContainer {
 							() -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
 							() -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
 							() -> {
-								double rot = 0.0;
-								if (controller.getHID().getLeftBumper()) {
-									rot -= 1.0;
-								}
-								if (controller.getHID().getRightBumper()) {
-									rot += 1.0;
-								}
+								double rot = controller.getRightX();
 								return controlsInverted ? -rot : rot;
 							},
-							() -> useFieldRelative,
-							() -> controller.getHID().getLeftTriggerAxis() > 0.5,
+							() -> true,
+							() -> controller.getHID().getLeftBumperButton(),
 							this::getAimTargetForAlliance));
 		} else {
 			
@@ -284,13 +327,7 @@ public class RobotContainer {
 							System.out.println("Drive controls: " + (controlsInverted ? "INVERTED" : "NORMAL"));
 						}));
 
-		// Toggle field relative mode with B 
-		controller.b().onTrue(
-				Commands.runOnce(
-						() -> {
-							useFieldRelative = !useFieldRelative;
-							System.out.println("Drive mode: " + (useFieldRelative ? "FIELD-RELATIVE" : "ROBOT-RELATIVE"));
-						}));
+		// Field-relative is always on (no toggle).
 
 		// Reset robot heading on A 
 		controller.a().onTrue(
@@ -320,9 +357,15 @@ public class RobotContainer {
 				.whileTrue(intake.runIntake())
 				.onFalse(intake.stopIntake());
 
-		// Left trigger used for aim (see default drive command)
+		// Left bumper used for aim (see default drive command)
 
-		controller.rightTrigger()
+		// Right bumper shoots. If left bumper is held, use auto distance-based RPMs.
+		var autoShootTrigger = controller.rightBumper().and(controller.leftBumper());
+		var manualShootTrigger = controller.rightBumper().and(controller.leftBumper().negate());
+		autoShootTrigger
+				.whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
+				.onFalse(shooter.stopCoralIntake());
+		manualShootTrigger
 				.whileTrue(stagedShootCommand())
 				.onFalse(shooter.stopCoralIntake());
 
@@ -342,8 +385,10 @@ public class RobotContainer {
 		
 		BUTTON_1.whileTrue(intake.runIntake()).onFalse(intake.stopIntake());
 		BUTTON_2.whileTrue(stagedShootCommand()).onFalse(shooter.stopCoralIntake());
-		BUTTON_3.onTrue(climbSubsystem.moveOneOutputRevolutionCommand());
-		BUTTON_4.onTrue(climbSubsystem.moveOneOutputRevolutionDownCommand());
+		BUTTON_3.whileTrue(stagedShootCommand6ft()).onFalse(shooter.stopCoralIntake());
+		BUTTON_4.whileTrue(stagedShootCommand7ft()).onFalse(shooter.stopCoralIntake());
+		BUTTON_5.onTrue(intakeArm.moveDownCommand());
+		BUTTON_6.onTrue(intakeArm.moveUpCommand());
 
 		operatorPovDown
 				.whileTrue(intakeArm.jogDownCommand())

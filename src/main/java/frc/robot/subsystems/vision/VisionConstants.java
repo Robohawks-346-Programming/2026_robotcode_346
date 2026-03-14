@@ -27,18 +27,18 @@ public final class VisionConstants {
 
             // Front (Top Camera) - FR
             new Transform3d(
-                    new Translation3d(-0.2832, -0.1751, 0.6733),
-                    new Rotation3d(0, Units.degreesToRadians(15), Units.degreesToRadians(0))),
+                    new Translation3d(0.08263, 0.26284, 0.67376),
+                    new Rotation3d(0, Units.degreesToRadians(15), Units.degreesToRadians(-15))),
 
             // Back Left - BL
             new Transform3d(
-                    new Translation3d(-0.2813, -0.2747, 0.1616),
-                    new Rotation3d(0, Units.degreesToRadians(15), Units.degreesToRadians(45))),
+                    new Translation3d(-0.2813, 0.2747, 0.1616),
+                    new Rotation3d(0, Units.degreesToRadians(10), Units.degreesToRadians(135))),
 
             // Back Right - BR
             new Transform3d(
-                    new Translation3d(0.2811, -0.2749, 0.1616),
-                    new Rotation3d(0, Units.degreesToRadians(15), Units.degreesToRadians(-45)))
+                    new Translation3d(-0.2811, -0.2749, 0.1616),
+                    new Rotation3d(0, Units.degreesToRadians(10), Units.degreesToRadians(-135)))
     };
 
 
