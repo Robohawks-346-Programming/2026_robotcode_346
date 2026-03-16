@@ -48,6 +48,9 @@ private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0
 	private static final double ANGLE_KD = 0.4;
 	private static final double ANGLE_MAX_VELOCITY = 8.0;
 	private static final double ANGLE_MAX_ACCELERATION = 20.0;
+	// Slower constraints for auto-aim so it doesn't spin too fast.
+	private static final double AIM_ANGLE_MAX_VELOCITY = 4.0;
+	private static final double AIM_ANGLE_MAX_ACCELERATION = 8.0;
 	private static final double FF_START_DELAY = 2.0; // Secs
 	private static final double FF_RAMP_RATE = 0.1; 
 	private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; 
@@ -56,7 +59,7 @@ private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0
 	private AkitDriveCommands() {
 	}
 
-	private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
+	static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
 		// Apply deadband to each axis independently to avoid unintended diagonal drift
 		double xProcessed = MathUtil.applyDeadband(x, DEADBAND);
 		double yProcessed = MathUtil.applyDeadband(y, DEADBAND);
@@ -130,144 +133,7 @@ private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0
 	 * Robot-relative drive command (default, no field-relative option).
 	 * Convenience method that defaults to robot-relative mode.
 	 */
-	public static Command joystickDrive(
-			Drive drive,
-			DoubleSupplier xSupplier,
-			DoubleSupplier ySupplier,
-			DoubleSupplier omegaSupplier) {
-		return joystickDrive(drive, xSupplier, ySupplier, omegaSupplier, () -> false);
-	}
-
-	private static final double AIM_KP = 3.2;
-	private static final double AIM_KD = 0.12;
-	private static final double AIM_ANGLE_TOLERANCE_RAD = Math.toRadians(0.8);
-	private static final double AIM_UNLOCK_TOLERANCE_RAD = Math.toRadians(2.0);
-	private static final double AIM_MAX_SPEED_SCALE = 0.42;
-	private static final double AIM_MAX_ACCEL_RAD_PER_SEC2 = 7.0;
-	private static final double AIM_OMEGA_SLEW_RAD_PER_SEC2 = 9.0;
-	private static final double AIM_LOCK_OMEGA_THRESHOLD_RAD_PER_SEC = 0.2;
-	private static final double AIM_MIN_TRANSLATION_SCALE = 0.70;
-
-	/**
-	 * Drive with optional aim-to-point: when aimButton is pressed, robot faces aimTarget,
-	 * right stick is disabled, and left stick still controls translation (field-relative).
-	 */
-	public static Command joystickDriveWithAim(
-			Drive drive,
-			DoubleSupplier xSupplier,
-			DoubleSupplier ySupplier,
-			DoubleSupplier omegaSupplier,
-			Supplier<Boolean> useFieldRelative,
-			Supplier<Boolean> aimButton,
-			Supplier<Translation2d> aimTargetSupplier) {
-		ProfiledPIDController aimController = new ProfiledPIDController(
-				AIM_KP,
-				0.0,
-				AIM_KD,
-				new TrapezoidProfile.Constraints(
-						drive.getMaxAngularSpeedRadPerSec() * AIM_MAX_SPEED_SCALE,
-						AIM_MAX_ACCEL_RAD_PER_SEC2));
-		aimController.enableContinuousInput(-Math.PI, Math.PI);
-		aimController.setTolerance(AIM_ANGLE_TOLERANCE_RAD, AIM_LOCK_OMEGA_THRESHOLD_RAD_PER_SEC);
-		SlewRateLimiter aimOmegaLimiter = new SlewRateLimiter(AIM_OMEGA_SLEW_RAD_PER_SEC2);
-		final boolean[] aimLocked = { false };
-		final boolean[] wasAiming = { false };
-
-		return Commands.run(
-				() -> {
-					double rawX = xSupplier.getAsDouble();
-					double rawY = ySupplier.getAsDouble();
-					Translation2d linearVelocity = getLinearVelocityFromJoysticks(rawX, rawY);
-
-					double omegaRadPerSec;
-					double translationScale = 1.0;
-					boolean aiming = aimButton.get();
-					if (aiming) {
-						Translation2d aimTarget = aimTargetSupplier.get();
-						// Aim mode: front faces target, ignore right stick
-						Pose2d pose = drive.getPose();
-						Rotation2d angleToTarget = aimTarget.minus(pose.getTranslation()).getAngle();
-						double measurementRad = drive.getRotation().getRadians();
-						double setpointRad = angleToTarget.getRadians();
-						double errorRad = angleToTarget.minus(drive.getRotation()).getRadians();
-						double maxAimOmegaRadPerSec = drive.getMaxAngularSpeedRadPerSec() * AIM_MAX_SPEED_SCALE;
-						double absErrorRad = Math.abs(errorRad);
-
-						// On initial LT press, reset controller state to avoid a one-cycle jump.
-						if (!wasAiming[0]) {
-							aimController.reset(measurementRad);
-							aimOmegaLimiter.reset(0.0);
-							aimLocked[0] = false;
-						}
-
-						if (aimLocked[0] && Math.abs(errorRad) <= AIM_UNLOCK_TOLERANCE_RAD) {
-							omegaRadPerSec = 0.0;
-						} else {
-							aimLocked[0] = false;
-							double desiredOmegaRadPerSec = MathUtil.clamp(
-									aimController.calculate(measurementRad, setpointRad),
-									-maxAimOmegaRadPerSec,
-									maxAimOmegaRadPerSec);
-							omegaRadPerSec = aimOmegaLimiter.calculate(desiredOmegaRadPerSec);
-
-							if (Math.abs(errorRad) <= AIM_ANGLE_TOLERANCE_RAD && aimController.atSetpoint()) {
-								aimLocked[0] = true;
-								omegaRadPerSec = 0.0;
-								aimController.reset(measurementRad);
-								aimOmegaLimiter.reset(0.0);
-							}
-						}
-
-						// While large heading correction is in progress, slightly reduce translation
-						// so field-relative direction feels smoother to the driver.
-						double errorFraction = MathUtil.clamp(absErrorRad / Math.PI, 0.0, 1.0);
-						translationScale = 1.0 - (1.0 - AIM_MIN_TRANSLATION_SCALE) * errorFraction;
-					} else {
-						aimLocked[0] = false;
-						aimController.reset(drive.getRotation().getRadians());
-						aimOmegaLimiter.reset(0.0);
-						double rawOmega = omegaSupplier.getAsDouble();
-						double omega = MathUtil.applyDeadband(rawOmega, ROTATION_DEADBAND);
-						omega = Math.copySign(omega * omega, omega);
-						omegaRadPerSec = omega * drive.getMaxAngularSpeedRadPerSec() * ROTATION_SCALE;
-					}
-					wasAiming[0] = aiming;
-
-					ChassisSpeeds speeds = new ChassisSpeeds(
-							linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE * translationScale,
-							linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE * translationScale,
-							omegaRadPerSec);
-
-					if (useFieldRelative.get()) {
-						boolean isFlipped = DriverStation.getAlliance().isPresent()
-								&& DriverStation.getAlliance().get() == Alliance.Red
-								&& !RobotBase.isSimulation();
-						Rotation2d currentRotation = drive.getRotation();
-						speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-								speeds,
-								isFlipped
-										? currentRotation.plus(new Rotation2d(Math.PI))
-										: currentRotation);
-					}
-
-					drive.runVelocity(speeds);
-				},
-				drive);
-	}
-
-	/**
-	 * Test command to force rotation - use this to verify rotation works.
-	 * Rotates at 30 degrees/second (0.524 rad/s).
-	 */
-	public static Command testRotation(Drive drive) {
-		return Commands.run(
-			() -> {
-				// Force pure rotation: 30 deg/sec = 0.524 rad/s
-				ChassisSpeeds testSpeeds = new ChassisSpeeds(0.0, 0.0, Math.toRadians(30));
-				drive.runVelocity(testSpeeds);
-			},
-			drive);
-	}
+	
 
 	/**
 	 * Field relative drive command using joystick for linear control and PID for

@@ -72,6 +72,16 @@ public class Shooter extends SubsystemBase {
 				this);
 	}
 
+	public Command runShoot11ft() {
+		return Commands.run(
+				() -> setTargets(
+						ShooterConstants.TALON_2_INCH_TARGET_RPM_11ft,
+						ShooterConstants.TALON_3_INCH_TARGET_RPM_11ft,
+						ShooterConstants.NEO_550_SPEED_PERCENT,
+						ShooterConstants.ROLLER_SPEED_PERCENT),
+				this);
+	}
+
 	public void setAutoTargetsFromDistanceFeet(double distanceFeet) {
 		autoDistanceFeet = distanceFeet;
 		autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
@@ -82,21 +92,30 @@ public class Shooter extends SubsystemBase {
 				ShooterConstants.NEO_550_SPEED_PERCENT,
 				ShooterConstants.ROLLER_SPEED_PERCENT);
 	}
+	public void stageAutoTargetsFromDistanceFeet(double distanceFeet) {
+		autoDistanceFeet = distanceFeet;
+		autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
+		autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
+		setTargets(
+				autoTwoInchRpm,
+				autoThreeInchRpm,
+				0.0,
+				0.0);
+	}
 
 	public Command runAutoShoot(DoubleSupplier distanceFeetSupplier) {
-		return Commands.sequence(
-				Commands.runOnce(
-						() -> setTargets(
-								0.0,
-								0.0,
-								0.0,
-								ShooterConstants.ROLLER_SPEED_PERCENT),
-						this),
-				Commands.waitSeconds(ShooterConstants.SHOOT_DELAY_SECONDS),
-				Commands.run(
-						() -> setAutoTargetsFromDistanceFeet(distanceFeetSupplier.getAsDouble()),
-						this));
-	}
+    return Commands.sequence(
+        Commands.runOnce(
+            () -> stageAutoTargetsFromDistanceFeet(distanceFeetSupplier.getAsDouble()),
+            this
+        ),
+        Commands.waitSeconds(ShooterConstants.SHOOT_DELAY_SECONDS),
+        Commands.run(
+            () -> setAutoTargetsFromDistanceFeet(distanceFeetSupplier.getAsDouble()),
+            this
+        )
+    );
+}
 
 	public Command runCoralIntake() {
 		return runShoot();

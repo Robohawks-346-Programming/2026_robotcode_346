@@ -36,6 +36,13 @@ public class Intake extends SubsystemBase {
 				this);
 	}
 
+	public Command runOuttake() {
+		return Commands.startEnd(
+				() -> setPercent(-IntakeConstants.INTAKE_SPEED_PERCENT),
+				this::stop,
+				this);
+	}
+
 	public Command stopIntake() {
 		return Commands.runOnce(this::stop, this);
 	}

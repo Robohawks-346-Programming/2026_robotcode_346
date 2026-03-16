@@ -42,8 +42,10 @@ public class IntakeArm extends SubsystemBase {
 	}
 
 	public void moveUp() {
+		double upOffset = IntakeArmConstants.ARM_UP_OFFSET_DEG
+				* Math.signum(IntakeArmConstants.ARM_DOWN_ANGLE_DEG - IntakeArmConstants.ARM_UP_ANGLE_DEG);
 		targetAngleDeg = MathUtil.clamp(
-				IntakeArmConstants.ARM_UP_ANGLE_DEG,
+				IntakeArmConstants.ARM_UP_ANGLE_DEG + upOffset,
 				ARM_MIN_ANGLE_DEG + IntakeArmConstants.ARM_SOFT_LIMIT_BUFFER_DEG,
 				ARM_MAX_ANGLE_DEG - IntakeArmConstants.ARM_SOFT_LIMIT_BUFFER_DEG);
 		state = IntakeArmState.MOVING_UP;

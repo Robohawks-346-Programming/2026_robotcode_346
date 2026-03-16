@@ -27,6 +27,7 @@ import frc.robot.Constants;
 
 /** IO implementation for Pigeon 2. */
 public class GyroIOPigeon2 implements GyroIO {
+	private static final double GYRO_YAW_OFFSET_DEG = 180.0;
 	private final Pigeon2 pigeon = new Pigeon2(
 			TunerConstants.DrivetrainConstants.Pigeon2Id,
 			Constants.DRIVETRAIN_CAN_BUS);
@@ -37,7 +38,7 @@ public class GyroIOPigeon2 implements GyroIO {
 
 	public GyroIOPigeon2() {
 		pigeon.getConfigurator().apply(new Pigeon2Configuration());
-		pigeon.getConfigurator().setYaw(0.0);
+		pigeon.getConfigurator().setYaw(GYRO_YAW_OFFSET_DEG);
 		yaw.setUpdateFrequency(Drive.ODOMETRY_FREQUENCY);
 		yawVelocity.setUpdateFrequency(50.0);
 		pigeon.optimizeBusUtilization();

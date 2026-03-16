@@ -1,10 +1,10 @@
+
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.wpilibj.Timer;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,9 +55,6 @@ public class VisionIOPhotonReal implements VisionIO {
 		// loop through all results to find pose and targets observed
 		for (var result : camera.getAllUnreadResults()) {
 
-			// Compute corrected FPGA-time timestamp for this result
-			double timestamp = Timer.getFPGATimestamp() - (result.metadata.getLatencyMillis() / 1000.0);
-
 			// find latest target
 			if (result.hasTargets()) {
 				inputs.latestTargetObservation = new TargetObservation(
@@ -87,7 +84,7 @@ public class VisionIOPhotonReal implements VisionIO {
 				tagsSeen.addAll(multitagResult.fiducialIDsUsed);
 				poses.add(
 						new PoseObservation(
-								timestamp,
+								result.getTimestampSeconds(),
 								robotPose,
 								multitagResult.estimatedPose.ambiguity,
 								multitagResult.fiducialIDsUsed.size(),
@@ -109,7 +106,7 @@ public class VisionIOPhotonReal implements VisionIO {
 					// Add pose observation
 					poses.add(
 							new PoseObservation(
-									timestamp, // Timestamp
+									result.getTimestampSeconds(), // Timestamp
 									robotPose, // 3D pose estimate
 									target.poseAmbiguity, // Ambiguity
 									1, // Tag count
@@ -121,14 +118,10 @@ public class VisionIOPhotonReal implements VisionIO {
 					// set latest single tag observation
 					inputs.latestSingleTagObservation = new SingleTagObservation(
 							target.fiducialId,
-							timestamp,
+							result.getTimestampSeconds(),
 							target.getBestCameraToTarget().getTranslation().getNorm(),
 							new Rotation2d(target.getYaw()),
 							new Rotation2d(target.getPitch()));
-
-					// Store camera-to-tag transform for calibration (if needed)
-					// This is accessible via target.getBestCameraToTarget() but we store it
-					// in a way that can be accessed during calibration
 				}
 			}
 		}

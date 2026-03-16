@@ -268,7 +268,6 @@ public class Drive extends SubsystemBase {
 		Logger.recordOutput("Odometry/Robot", robotPose);
 		Logger.recordOutput("RobotPose2d", robotPose);
 		Logger.recordOutput("RobotPose3d", new Pose3d(robotPose));
-		field2d.setRobotPose(robotPose);
 
 		// Stop moving when disabled (but keep pose updates so the field still renders)
 		if (DriverStation.isDisabled()) {

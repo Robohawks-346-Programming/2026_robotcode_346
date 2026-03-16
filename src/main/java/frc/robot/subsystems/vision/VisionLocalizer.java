@@ -18,7 +18,6 @@ import frc.robot.subsystems.vision.VisionIO.SingleTagObservation;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -32,14 +31,7 @@ public class VisionLocalizer extends SubsystemBase {
 	private final Alert[] disconnectedAlerts;
 	// avoid NullPointerExceptions by setting a default no-op
 	private VisionConsumer consumer;
-
-	private Supplier<Pose2d> poseSupplier;
-
-	private boolean hasAcceptedVisionPose = false;
-
-	/** Vision-only pose (from 3 cameras + tags, no odometry fusion). Logged for AdvantageScope. */
-	private Pose2d lastVisionOnlyPose = new Pose2d();
-
+	private Drive drive;
 	// private double[] cameraStdDevFactors;
 
 	/**
@@ -48,17 +40,21 @@ public class VisionLocalizer extends SubsystemBase {
 	 * @param consumer
 	 *            functional interface responsible for adding vision measurements to
 	 *            drive pose
-	 * @param poseSupplier
-	 *            supplier function that returns current robot pose for pose delta rejection
+	 * @param aprilTagLayout
+	 *            the field layout for current year
+	 * @param cameraStdDevFactors
+	 *            factors to multiply standard deviation. matches camera index
+	 *            (camera 0 -> index 0 in factors)
 	 * @param io
 	 *            of each camera, using photon vision or sim
 	 */
 	public VisionLocalizer(
-			VisionConsumer consumer, Supplier<Pose2d> poseSupplier,
+			VisionConsumer consumer, Drive drive,
+			// double[] cameraStdDevFactors,
 			VisionIO... io) {
 		this.consumer = consumer;
 		this.io = io;
-		this.poseSupplier = poseSupplier;
+		this.drive = drive;
 		// this.cameraStdDevFactors = cameraStdDevFactors;
 
 		for (int i = 0; i < io.length; i++) {
@@ -129,7 +125,6 @@ public class VisionLocalizer extends SubsystemBase {
 		// calculate strafe and forward distances required to get to tag
 		double crossTrackDistance = distanceXYPlane * Math.sin(tagObserved.tx().minus(new Rotation2d()).getRadians())
 				+ crossTrackOffsetMeters;
-
 		double alongTrackDistance = distanceXYPlane * Math.cos(tagObserved.tx().minus(new Rotation2d()).getRadians())
 				+ alongTrackOffsetMeters;
 
@@ -141,7 +136,6 @@ public class VisionLocalizer extends SubsystemBase {
 	public void periodic() {
 		for (int i = 0; i < io.length; i++) {
 			io[i].updateInputs(inputs[i]);
-
 			Logger.processInputs("Vision/Camera" + i, inputs[i]);
 		}
 
@@ -152,7 +146,6 @@ public class VisionLocalizer extends SubsystemBase {
 
 		// Loop over cameras
 		for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
-
 			// Update disconnected alert
 			disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].connected);
 
@@ -163,15 +156,12 @@ public class VisionLocalizer extends SubsystemBase {
 
 			for (VisionIO.PoseObservation observation : inputs[cameraIndex].poseObservations) {
 				robotPoses.add(observation.pose());
-
 				if (shouldRejectPose(observation)) {
 					robotPosesRejected.add(observation.pose());
-
 					continue;
 				}
 
 				robotPosesAccepted.add(observation.pose());
-				lastVisionOnlyPose = observation.pose().toPose2d();
 
 				consumer.accept(
 						observation.pose().toPose2d(),
@@ -181,16 +171,11 @@ public class VisionLocalizer extends SubsystemBase {
 			logCameraData(cameraIndex, robotPoses, robotPosesAccepted, robotPosesRejected);
 
 			allRobotPoses.addAll(robotPoses);
-
 			allRobotPosesAccepted.addAll(robotPosesAccepted);
-
 			allRobotPosesRejected.addAll(robotPosesRejected);
 		}
 
 		logSummaryData(allRobotPoses, allRobotPosesAccepted, allRobotPosesRejected);
-
-		// Log vision-only pose (3 cameras + tags only, no drive fusion) for AdvantageScope
-		Logger.recordOutput("Vision/VisionOnlyPose", lastVisionOnlyPose);
 	}
 
 	/** sets a VisionConsumer for the vision to send estimates to */
@@ -207,44 +192,20 @@ public class VisionLocalizer extends SubsystemBase {
 	 *         out of field
 	 */
 	private boolean shouldRejectPose(VisionIO.PoseObservation observation) {
-		// PART 1: First valid vision reading must always be accepted
-		// DO NOT apply delta check for the first accepted vision
-		// ONLY basic validity checks apply
-		// When the first valid vision solve arrives → ALWAYS accept it
-		if (!hasAcceptedVisionPose) {
-			if (observation.tagCount() > 0
-					&& observation.ambiguity() < 0.30
-					&& Math.abs(observation.pose().getZ()) < 1.0
-					&& observation.averageTagDistance() <= 10
-					&& observation.pose().getX() >= 0.0
-					&& observation.pose().getX() <= VisionConstants.aprilTagLayout.getFieldLength()
-					&& observation.pose().getY() >= 0.0
-					&& observation.pose().getY() <= VisionConstants.aprilTagLayout.getFieldWidth()) {
-				hasAcceptedVisionPose = true;
-				return false; // Always accept first good vision
-			}
-			// If first vision doesn't pass relaxed checks, reject it
-			return true;
-		}
-
-		// Basic quality checks (for subsequent visions)
-		if (observation.tagCount() == 0 // Must have at least one tag
-				|| Math.abs(observation.pose().getZ()) > 1.0 // Must have realistic Z coordinate
-				|| observation.averageTagDistance() > 10
-				|| observation.ambiguity() > 0.18
-
-				// Must be within the field boundaries
-				|| observation.pose().getX() < 0.0
-				|| observation.pose().getX() > VisionConstants.aprilTagLayout.getFieldLength()
-				|| observation.pose().getY() < 0.0
-				|| observation.pose().getY() > VisionConstants.aprilTagLayout.getFieldWidth()) {
-			return true;
-		}
-
-		// When tags are visible, let vision through so it can take over the robot pose.
-		// Do not reject for disagreeing with odometry – vision corrects drift.
-		return false;
-	}
+    return observation.tagCount() == 0 // Must have at least one tag
+            || Math.abs(observation.pose().getZ()) > 1.0 // Must have realistic Z coordinate
+            || observation.averageTagDistance() > 10
+            || observation.ambiguity() > 0.2
+            // Must be within the field boundaries
+            || observation.pose().getX() < 0.0
+            || observation.pose().getX() > VisionConstants.aprilTagLayout.getFieldLength()
+            || observation.pose().getY() < 0.0
+            || observation.pose().getY() > VisionConstants.aprilTagLayout.getFieldWidth();
+            // || Math.abs(
+            //     drive.getHeading().getDegrees()
+            //     - Units.radiansToDegrees(observation.pose().getRotation().getAngle())
+            // ) > 10;
+}
 
 	/**
 	 * calculates how much we should rely on this pose when sending it to vision
@@ -258,18 +219,20 @@ public class VisionLocalizer extends SubsystemBase {
 	 */
 	private Matrix<N3, N1> getLatestVariance(
 			VisionIO.PoseObservation observation, int cameraIndex) {
-		double d = observation.averageTagDistance();
-		int n = observation.tagCount();
+		double avgDistanceFromTarget = observation.averageTagDistance();
+		int numTags = observation.tagCount();
+		double linearStdDev = 0.02
+				* Math.pow(avgDistanceFromTarget, 2)
+				/ numTags;
+		double angularStdDev = 0.06
+				* Math.pow(avgDistanceFromTarget, 2)
+				/ numTags;
 
-		// Vision takes over when tags are seen; slightly higher std dev reduces jitter.
-		double baseLin = 0.03; // 3 cm base
-		double baseAng = 0.04;  // ~2.3° base
-
-		double linearStdDev = baseLin * (1.0 + (d * d) / n);
-		double angularStdDev = baseAng * (1.0 + (d * d) / n);
-
-		linearStdDev = Math.min(linearStdDev, 0.18); // 18 cm max
-		angularStdDev = Math.min(angularStdDev, 0.12); // ~6.9° max
+		// adjustment based on position of camera
+		// if (cameraIndex < this.cameraStdDevFactors.length) {
+		// linearStdDev *= this.cameraStdDevFactors[cameraIndex];
+		// angularStdDev *= this.cameraStdDevFactors[cameraIndex];
+		// }
 
 		return VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev);
 	}
@@ -292,16 +255,13 @@ public class VisionLocalizer extends SubsystemBase {
 			List<Pose3d> robotPoses,
 			List<Pose3d> robotPosesAccepted,
 			List<Pose3d> robotPosesRejected) {
-
 		// Log camera datadata
 		Logger.recordOutput(
 				"Vision/Camera" + cameraIndex + "/RobotPoses",
 				robotPoses.toArray(new Pose3d[robotPoses.size()]));
-
 		Logger.recordOutput(
 				"Vision/Camera" + cameraIndex + "/RobotPosesAccepted",
 				robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
-
 		Logger.recordOutput(
 				"Vision/Camera" + cameraIndex + "/RobotPosesRejected",
 				robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
@@ -321,15 +281,12 @@ public class VisionLocalizer extends SubsystemBase {
 			List<Pose3d> allRobotPoses,
 			List<Pose3d> allRobotPosesAccepted,
 			List<Pose3d> allRobotPosesRejected) {
-
 		Logger.recordOutput(
 				"Vision/Summary/RobotPoses",
 				allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
-
 		Logger.recordOutput(
 				"Vision/Summary/RobotPosesAccepted",
 				allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
-
 		Logger.recordOutput(
 				"Vision/Summary/RobotPosesRejected",
 				allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
@@ -346,5 +303,4 @@ public class VisionLocalizer extends SubsystemBase {
 	public static record DistanceToTag(
 			double crossTrackDistance, double alongTrackDistance, boolean isValid) {
 	};
-
 }

@@ -7,32 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Top_1"
+            "pathName": "Workingauto"
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Top_2"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              }
-            ]
+            "name": "ArmDown"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Top_3"
+            "name": "intaketest"
           }
         },
         {

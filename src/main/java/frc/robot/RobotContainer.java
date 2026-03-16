@@ -8,6 +8,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -53,6 +54,8 @@ public class RobotContainer {
 	private static final double AUTO_SHOOT_EVENT_SECONDS = 5.0;
 	private static final double SHOOT_STAGE1_SECONDS = 0.5;
 	private static final double SHOOT_STAGE2_SECONDS = 0.5;
+	private static final double HARD_AUTO_BACK_METERS = 0.25;
+	private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
 
 	private final Drive drive;
 	private final VisionLocalizer vision;
@@ -90,7 +93,8 @@ public class RobotContainer {
 	
 	private boolean useFieldRelative = true;
 
-	private boolean controlsInverted = false;
+	// Start inverted so controls feel normal without needing to press X.
+	private boolean controlsInverted = true;
 
 	public RobotContainer() {
 		int driverPort = selectDriverControllerPort();
@@ -150,7 +154,7 @@ public class RobotContainer {
 						new ModuleIO() {},
 						new ModuleIO() {},
 						new ModuleIO() {});
-				vision = new VisionLocalizer(drive::addVisionMeasurement, drive::getPose, new VisionIO() {});
+				vision = new VisionLocalizer(drive::addVisionMeasurement, drive, new VisionIO() {});
 		}
 
 		ShooterIO shooterIO = switch (Constants.currentMode) {
@@ -200,13 +204,16 @@ public class RobotContainer {
 
 	private LoggedDashboardChooser<Command> createAutoChooserSafe() {
 		try {
-			return new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+			SendableChooser<Command> chooser = AutoBuilder.buildAutoChooser();
+			chooser.addOption("hardauto", hardAutoCommand());
+			return new LoggedDashboardChooser<>("Auto Choices", chooser);
 		} catch (Exception e) {
 			DriverStation.reportError(
 					"Failed to load PathPlanner autos. Falling back to Do Nothing auto.\n" + e.getMessage(),
 					e.getStackTrace());
 			SendableChooser<Command> fallbackChooser = new SendableChooser<>();
 			fallbackChooser.setDefaultOption("Do Nothing", Commands.none());
+			fallbackChooser.addOption("hardauto", hardAutoCommand());
 			return new LoggedDashboardChooser<>("Auto Choices", fallbackChooser);
 		}
 	}
@@ -215,12 +222,23 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
 		// Alias for lowercase marker names in Choreo/PathPlanner.
 		NamedCommands.registerCommand("intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
+		NamedCommands.registerCommand("intaketest", intake.runIntake().withTimeout(2));
 		NamedCommands.registerCommand("Shoot", autoShootEventCommand());
 		NamedCommands.registerCommand("shoot", autoShootEventCommand());
-		NamedCommands.registerCommand("Climb", climbSubsystem.moveOneOutputRevolutionCommand());
-		NamedCommands.registerCommand("climb", climbSubsystem.moveOneOutputRevolutionCommand());
-		NamedCommands.registerCommand("ClimbUp", climbSubsystem.moveOneOutputRevolutionCommand());
-		NamedCommands.registerCommand("climbup", climbSubsystem.moveOneOutputRevolutionCommand());
+		// NamedCommands.registerCommand("Climb", climbSubsystem.moveOneOutputRevolutionCommand());
+		// NamedCommands.registerCommand("climb", climbSubsystem.moveOneOutputRevolutionCommand());
+		// NamedCommands.registerCommand("ClimbUp", climbSubsystem.moveOneOutputRevolutionCommand());
+		// NamedCommands.registerCommand("climbup", climbSubsystem.moveOneOutputRevolutionCommand());
+		// Immediate arm down for starting autos.
+		Command armDownAuto = intakeArm.moveDownCommand();
+		NamedCommands.registerCommand("ArmDown", armDownAuto);
+		NamedCommands.registerCommand("armdown", armDownAuto);
+		// delayed version.
+		Command armDownDelay1 = Commands.sequence(
+				Commands.waitSeconds(1.0),
+				intakeArm.moveDownCommand());
+		NamedCommands.registerCommand("ArmDownDelay1", armDownDelay1);
+		NamedCommands.registerCommand("armdowndelay1", armDownDelay1);
 	}
 
 	private Command autoShootEventCommand() {
@@ -235,6 +253,25 @@ public class RobotContainer {
 				});
 	}
 
+	private Command hardAutoCommand() {
+		double backSeconds = 0.5;
+		double direction = 1.0;
+		Command driveBack = Commands.run(
+				() -> drive.runVelocity(new ChassisSpeeds(HARD_AUTO_BACK_SPEED_MPS * direction, 0.0, 0.0)),
+				drive)
+				.withTimeout(backSeconds)
+				.andThen(Commands.runOnce(drive::stop, drive));
+
+		return Commands.sequence(
+			Commands.race(driveBack,Commands.waitSeconds(0.5)),
+				
+				Commands.runOnce(drive::stop, drive),
+				Commands.waitSeconds(1.0),
+				intakeArm.moveDownCommand(),
+				intake.runIntake().withTimeout(2),
+				stagedShootCommand6ft().withTimeout(AUTO_SHOOT_EVENT_SECONDS));
+	}
+
 	/**
 	 * Creates vision system with automatically detected cameras.
 	 */
@@ -242,17 +279,26 @@ public class RobotContainer {
 		if (Constants.currentMode == Constants.Mode.REAL) {
 			return new VisionLocalizer(
 					drive::addVisionMeasurement,
-					drive::getPose,
+					drive,
 					new VisionIOPhotonReal(VisionConstants.cameraNames[0], VisionConstants.vehicleToCameras[0]),
 					new VisionIOPhotonReal(VisionConstants.cameraNames[1], VisionConstants.vehicleToCameras[1]),
 					new VisionIOPhotonReal(VisionConstants.cameraNames[2], VisionConstants.vehicleToCameras[2]));
 		} else {
 			return new VisionLocalizer(
 					drive::addVisionMeasurement,
-					drive::getPose,
-					new VisionIOPhotonSim(VisionConstants.cameraNames[0], VisionConstants.vehicleToCameras[0], drive::getPose),
-					new VisionIOPhotonSim(VisionConstants.cameraNames[1], VisionConstants.vehicleToCameras[1], drive::getPose),
-					new VisionIOPhotonSim(VisionConstants.cameraNames[2], VisionConstants.vehicleToCameras[2], drive::getPose));
+					drive,
+					new VisionIOPhotonSim(
+							VisionConstants.cameraNames[0],
+							VisionConstants.vehicleToCameras[0],
+							() -> drive.getPose()),
+					new VisionIOPhotonSim(
+							VisionConstants.cameraNames[1],
+							VisionConstants.vehicleToCameras[1],
+							() -> drive.getPose()),
+					new VisionIOPhotonSim(
+							VisionConstants.cameraNames[2],
+							VisionConstants.vehicleToCameras[2],
+							() -> drive.getPose()));
 		}
 	}
 
@@ -260,14 +306,11 @@ public class RobotContainer {
 	private static final Translation2d RED_AIM_TARGET = new Translation2d(11.917, 4.030);
 
 	private Translation2d getAimTargetForAlliance() {
-		// Keep sim on blue for predictable testing (sim DS alliance is often unset/wrong).
-		if (RobotBase.isSimulation()) {
-			return BLUE_AIM_TARGET;
-		}
 		var alliance = DriverStation.getAlliance();
 		if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
 			return RED_AIM_TARGET;
 		}
+		// Default to blue if alliance is unknown (common in sim/when DS not attached yet).
 		return BLUE_AIM_TARGET;
 	}
 
@@ -338,21 +381,14 @@ public class RobotContainer {
 
 	private void configureButtonBindings() {
 		if (DRIVE_ENABLED) {
-		
 			drive.setDefaultCommand(
-					AkitDriveCommands.joystickDriveWithAim(
+					AkitDriveCommands.joystickDrive(
 							drive,
 							() -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
 							() -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
-							() -> {
-								double rot = controller.getRightX();
-								return controlsInverted ? -rot : rot;
-							},
-							() -> true,
-							() -> controller.getHID().getLeftBumperButton(),
-							this::getAimTargetForAlliance));
+							() -> controller.getRightX(),
+							() -> true));
 		} else {
-			
 			drive.setDefaultCommand(Commands.run(drive::stop, drive));
 		}
 
@@ -394,15 +430,25 @@ public class RobotContainer {
 				.whileTrue(intake.runIntake())
 				.onFalse(intake.stopIntake());
 
-		// Left bumper used for aim (see default drive command)
+		
 
-		// Right bumper shoots. If left bumper is held, use auto distance-based RPMs.
-		var autoShootTrigger = controller.rightBumper().and(controller.leftBumper());
-		var manualShootTrigger = controller.rightBumper().and(controller.leftBumper().negate());
-		autoShootTrigger
-				.whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
-				.onFalse(shooter.stopCoralIntake());
-		manualShootTrigger
+		
+		// Define the triggers
+		var leftBumper = controller.leftBumper();
+		var rightBumper = controller.rightBumper();
+
+		// Aim override while LB is held
+		leftBumper.whileTrue(
+				AkitDriveCommands.joystickDriveWithAim(
+						drive,
+						() -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
+						() -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
+						() -> controller.getRightX(),
+						() -> true, // Force Aim logic 'on'
+						this::getAimTargetForAlliance));
+					
+		// Staged shoot with RB only (no LB)
+		rightBumper.and(leftBumper.negate())
 				.whileTrue(stagedShootCommand())
 				.onFalse(shooter.stopCoralIntake());
 
@@ -426,6 +472,12 @@ public class RobotContainer {
 		BUTTON_4.whileTrue(stagedShootCommand7ft()).onFalse(shooter.stopCoralIntake());
 		BUTTON_5.onTrue(intakeArm.moveDownCommand());
 		BUTTON_6.onTrue(intakeArm.moveUpCommand());
+		BUTTON_7
+				.whileTrue(intakeArm.jogDownCommand())
+				.onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
+		BUTTON_9.onTrue(Commands.runOnce(drive::stopWithX, drive));
+		BUTTON_8.whileTrue(intake.runOuttake()).onFalse(intake.stopIntake());
+		
 
 		operatorPovDown
 				.whileTrue(intakeArm.jogDownCommand())
