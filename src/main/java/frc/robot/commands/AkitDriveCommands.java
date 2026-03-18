@@ -13,23 +13,6 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -39,13 +22,29 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.drive.Drive;
+
 public class AkitDriveCommands {
 private static final double DEADBAND = 0.1;
 private static final double ROTATION_DEADBAND = 0.05; // Smaller deadband for rotation
 private static final double SPEED_SCALE = 0.65; // Scale down max speed (0.25 = 25% of max speed)
 private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0.25 = 25% of max rotation)
-	private static final double ANGLE_KP = 5.0;
-	private static final double ANGLE_KD = 0.4;
+	private static final double ANGLE_KP = 0.5;
+	private static final double ANGLE_KD = 0.0;
 	private static final double ANGLE_MAX_VELOCITY = 8.0;
 	private static final double ANGLE_MAX_ACCELERATION = 20.0;
 	// Slower constraints for auto-aim so it doesn't spin too fast.
@@ -211,10 +210,15 @@ public static Command joystickDriveWithAim(
                     // AUTO-AIM MODE
                     Translation2d robotPoint = drive.getPose().getTranslation();
                     Rotation2d targetAngle = aimTargetSupplier.get().minus(robotPoint).getAngle();
-                   
-                    omega = angleController.calculate(
-                            drive.getRotation().getRadians(),
-                            targetAngle.getRadians());
+                   targetAngle = targetAngle.plus(Rotation2d.fromDegrees(180));
+                  double error = targetAngle.minus(drive.getRotation()).getRadians();
+
+                        if (Math.abs(error) < Units.degreesToRadians(20)) {
+                   omega = 0; // Stop rotating if within 1 degree
+                        } else {
+                 omega = angleController.calculate(drive.getRotation().getRadians(), drive.getRotation().getRadians() + error);
+                }
+
                 } else {
                     // MANUAL MODE
                     double rawOmega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), ROTATION_DEADBAND);
@@ -242,7 +246,17 @@ public static Command joystickDriveWithAim(
                                         : drive.getRotation()));
             },
             drive)
-            .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+            .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()))
+            .until(() ->  {
+                Translation2d targetPos = aimTargetSupplier.get();
+                Rotation2d targetAngle = targetPos.minus(drive.getPose().getTranslation())
+                                 .getAngle()
+                                 .plus(Rotation2d.fromDegrees(180));
+                double error = targetAngle.minus(drive.getRotation()).getRadians();
+                return Math.abs(error) < Units.degreesToRadians(20);
+            }).finallyDo(interrupted -> {
+    joystickDrive(drive, xSupplier, ySupplier, omegaSupplier, aimButton);
+});
 }
 	/**
 	 * Measures the velocity feedforward constants for the drive motors.

@@ -428,25 +428,25 @@ public class RobotContainer {
 
 
         // Reset robot heading on A
-        controller.a().onTrue(
-                Commands.runOnce(
-                        () -> {
-                            drive.zeroGyro();
-                            System.out.println("Robot heading reset - current front is now forward");
-                        },
-                        drive)
-                        .ignoringDisable(true));
+        // controller.a().onTrue(
+        //         Commands.runOnce(
+        //                 () -> {
+        //                     drive.zeroGyro();
+        //                     System.out.println("Robot heading reset - current front is now forward");
+        //                 },
+        //                 drive)
+        //                 .ignoringDisable(true));
 
 
        
-        controller.start().onTrue(
-                Commands.runOnce(
-                        () -> {
-                            drive.zeroGyro();
-                            System.out.println("Gyro zeroed - robot heading reset to zero");
-                        },
-                        drive)
-                        .ignoringDisable(true));
+        // controller.start().onTrue(
+        //         Commands.runOnce(
+        //                 () -> {
+        //                     drive.zeroGyro();
+        //                     System.out.println("Gyro zeroed - robot heading reset to zero");
+        //                 },
+        //                 drive)
+        //                 .ignoringDisable(true));
 
 
        
@@ -470,7 +470,7 @@ public class RobotContainer {
 
 
         
-        leftBumper.whileTrue(
+        leftBumper.onTrue(
     AkitDriveCommands.joystickDriveWithAim(
         drive,
         () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
