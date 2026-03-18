@@ -187,7 +187,63 @@ private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0
 				// Reset PID controller when command starts
 				.beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
 	}
+public static Command joystickDriveWithAim(
+        Drive drive,
+        DoubleSupplier xSupplier,
+        DoubleSupplier ySupplier,
+        DoubleSupplier omegaSupplier, // Added back for manual control
+        Supplier<Boolean> aimButton,
+        Supplier<Translation2d> aimTargetSupplier) {
 
+    ProfiledPIDController angleController = new ProfiledPIDController(
+            ANGLE_KP, 0.0, ANGLE_KD,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+
+    return Commands.run(
+            () -> {
+                Translation2d linearVelocity = getLinearVelocityFromJoysticks(
+                        xSupplier.getAsDouble(),
+                        ySupplier.getAsDouble());
+
+                double omega;
+                if (aimButton.get()) {
+                    // AUTO-AIM MODE
+                    Translation2d robotPoint = drive.getPose().getTranslation();
+                    Rotation2d targetAngle = aimTargetSupplier.get().minus(robotPoint).getAngle();
+                   
+                    omega = angleController.calculate(
+                            drive.getRotation().getRadians(),
+                            targetAngle.getRadians());
+                } else {
+                    // MANUAL MODE
+                    double rawOmega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), ROTATION_DEADBAND);
+                    omega = Math.copySign(rawOmega * rawOmega, rawOmega)
+                            * drive.getMaxAngularSpeedRadPerSec() * ROTATION_SCALE;
+                   
+                    // Reset PID so it doesn't "accumulate" while you're driving manually
+                    angleController.reset(drive.getRotation().getRadians());
+                }
+
+                ChassisSpeeds speeds = new ChassisSpeeds(
+                        linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE,
+                        linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE,
+                        omega);
+
+                // Use current alliance for field-relative flipping
+                boolean isFlipped = DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == Alliance.Red;
+               
+                drive.runVelocity(
+                        ChassisSpeeds.fromFieldRelativeSpeeds(
+                                speeds,
+                                isFlipped
+                                        ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                                        : drive.getRotation()));
+            },
+            drive)
+            .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+}
 	/**
 	 * Measures the velocity feedforward constants for the drive motors.
 	 *

@@ -16,7 +16,6 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -27,7 +26,6 @@ import frc.robot.Constants;
 
 /** IO implementation for Pigeon 2. */
 public class GyroIOPigeon2 implements GyroIO {
-	private static final double GYRO_YAW_OFFSET_DEG = 180.0;
 	private final Pigeon2 pigeon = new Pigeon2(
 			TunerConstants.DrivetrainConstants.Pigeon2Id,
 			Constants.DRIVETRAIN_CAN_BUS);
@@ -37,8 +35,7 @@ public class GyroIOPigeon2 implements GyroIO {
 	private final StatusSignal<AngularVelocity> yawVelocity = pigeon.getAngularVelocityZWorld();
 
 	public GyroIOPigeon2() {
-		pigeon.getConfigurator().apply(new Pigeon2Configuration());
-		pigeon.getConfigurator().setYaw(GYRO_YAW_OFFSET_DEG);
+		pigeon.getConfigurator().apply(TunerConstants.getPigeon2Configs());
 		yaw.setUpdateFrequency(Drive.ODOMETRY_FREQUENCY);
 		yawVelocity.setUpdateFrequency(50.0);
 		pigeon.optimizeBusUtilization();
