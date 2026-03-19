@@ -470,7 +470,7 @@ public class RobotContainer {
 
 
         
-        leftBumper.onTrue(
+        leftBumper.whileTrue(
     AkitDriveCommands.joystickDriveWithAim(
         drive,
         () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),

@@ -245,8 +245,8 @@ public static Command joystickDriveWithAim(
                     aimWithinThreshold = Math.abs(error) < Units.degreesToRadians(20);
 
 
-                        if (Math.abs(error) % Math.PI < Units.degreesToRadians(20)) {
-                   omega = 0.2; 
+                        if (Math.abs(180- Math.abs(error)) < Units.degreesToRadians(20)) {
+                   omega = 0.0; 
                         } else {
                  omega = angleController.calculate(drive.getRotation().getRadians(), drive.getRotation().getRadians() + error);
                 }
@@ -297,7 +297,7 @@ public static Command joystickDriveWithAim(
                                  .getAngle()
                                  .plus(Rotation2d.fromDegrees(180));
                 double error = targetAngle.minus(drive.getRotation()).getRadians();
-                return Math.abs(error) < Units.degreesToRadians(20);
+                return Math.abs(180-Math.abs(error)) < Units.degreesToRadians(20);
             }).finallyDo(interrupted -> {
     joystickDrive(drive, xSupplier, ySupplier, omegaSupplier, aimButton);
 });
