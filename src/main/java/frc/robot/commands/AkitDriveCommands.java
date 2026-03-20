@@ -27,6 +27,7 @@ import org.littletonrobotics.junction.Logger;
 
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -207,84 +208,79 @@ private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0
                 .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
     }
 public static Command joystickDriveWithAim(
-        Drive drive,
-        DoubleSupplier xSupplier,
-        DoubleSupplier ySupplier,
-        DoubleSupplier omegaSupplier, // Added back for manual control
-        Supplier<Boolean> aimButton,
-        Supplier<Translation2d> aimTargetSupplier) {
+    Drive drive,
+    DoubleSupplier xSupplier,
+    DoubleSupplier ySupplier,
+    DoubleSupplier omegaSupplier,
+    Supplier<Boolean> useFieldRelative,
+    Supplier<Boolean> aimButton
+) {
 
-
-    ProfiledPIDController angleController = new ProfiledPIDController(
-            ANGLE_KP, 0.0, ANGLE_KD,
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
-    angleController.enableContinuousInput(-Math.PI, Math.PI);
-
+    PIDController turnController = new PIDController(0.09, 0, 0);
+    turnController.enableContinuousInput(-180, 180);
 
     return Commands.run(
-            () -> {
-                Translation2d linearVelocity = getLinearVelocityFromJoysticks(
-                        xSupplier.getAsDouble(),
-                        ySupplier.getAsDouble());
+        () -> {
+        
+            double rawX = xSupplier.getAsDouble();
+            double rawY = ySupplier.getAsDouble();
 
+            Translation2d linearVelocity = getLinearVelocityFromJoysticks(rawX, rawY);
 
-                boolean aimEnabled = false;
-                double aimErrorRad = 0.0;
-                double aimTargetDeg = drive.getRotation().getDegrees();
-                boolean aimWithinThreshold = false;
-                double omega;
-                if (aimButton.get()) {
-                    aimEnabled = true;
-                    // AUTO-AIM MODE
-                    Translation2d robotPoint = drive.getPose().getTranslation();
-                    Rotation2d targetAngle = aimTargetSupplier.get().minus(robotPoint).getAngle();
-                   targetAngle = targetAngle.plus(Rotation2d.fromDegrees(180));
-                  double error = targetAngle.minus(drive.getRotation()).getRadians();
-                    aimErrorRad = error;
-                    aimTargetDeg = targetAngle.getDegrees();
-                    aimWithinThreshold = ((Math.abs(error - Math.PI) ) )< Units.degreesToRadians(10);
+            double omegaRadPerSec;
 
-                         
-                        if (((Math.abs(error- Math.PI) ) ) < Units.degreesToRadians(10)) {
-                  // omega = 0; 
-                        } else {
-                // omega = angleController.calculate(drive.getRotation().getRadians(), drive.getRotation().getRadians() + error);
-                }
+            
+            if (aimButton.get()) {
 
+                Translation2d target = new Translation2d(11.907, 4.030);
+                Translation2d robotPos = drive.getPose().getTranslation();
+
+                double currentAngle =
+                    drive.getPose().getRotation().getDegrees();
+
+                double targetAngle =
+                    target.minus(robotPos).getAngle().getDegrees() - 2;
+
+                double output =
+                    turnController.calculate(currentAngle, targetAngle);
+
+               
+                omegaRadPerSec = Math.toRadians(output);
 
                 
 
-                Logger.recordOutput("Drive/Aim/updatederror",Units.radiansToDegrees((Math.abs(error - Math.PI))));
-                Logger.recordOutput("Drive/Aim/Enabled", aimEnabled);
-                Logger.recordOutput("Drive/Aim/TargetAngleDeg", aimTargetDeg);
-                Logger.recordOutput("Drive/Aim/RobotAngleDeg", drive.getRotation().getDegrees());
-                Logger.recordOutput("Drive/Aim/ErrorRad", aimErrorRad);
-                Logger.recordOutput("Drive/Aim/ErrorDeg", Units.radiansToDegrees(aimErrorRad));
-                Logger.recordOutput("Drive/Aim/WithinThreshold", aimWithinThreshold);
+            } else {
+
                
+                double rawOmega = omegaSupplier.getAsDouble();
+                double omega = MathUtil.applyDeadband(rawOmega, 0.05);
+                omega = Math.copySign(omega * omega, omega);
+
+                omegaRadPerSec =
+                    omega * drive.getMaxAngularSpeedRadPerSec() * 0.3;
+            }
 
 
-                ChassisSpeeds speeds = new ChassisSpeeds(
-                        linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE,
-                        linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE,
-                        omegaSupplier.getAsDouble()*drive.getMaxAngularSpeedRadPerSec()*ROTATION_SCALE);
+            ChassisSpeeds speeds = new ChassisSpeeds(
+                linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * 0.3,
+                linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * 0.3,
+                omegaRadPerSec
+            );
 
+           
 
-                // Use current alliance for field-relative flipping
-                boolean isFlipped = DriverStation.getAlliance().isPresent()
-                        && DriverStation.getAlliance().get() == Alliance.Red;
-               
-                drive.runVelocity(
-                        ChassisSpeeds.fromFieldRelativeSpeeds(
-                                speeds,
-                                isFlipped
-                                        ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                                        : drive.getRotation()));
-            }},
-            drive)
-            .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
             
+            drive.runVelocity(speeds);
+
+        },
+        drive
+    );
 }
+
+
+
+
+
     /**
      * Measures the velocity feedforward constants for the drive motors.
      *

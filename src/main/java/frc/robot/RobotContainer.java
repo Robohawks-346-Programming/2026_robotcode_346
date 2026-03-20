@@ -477,9 +477,17 @@ public class RobotContainer {
         () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
         () -> controller.getRightX(),
         () -> true,
-        () -> new Translation2d(11.915129661560059, 4.034599781036377)
+        () -> true   
     )
 );
+
+
+
+
+
+
+
+
                 
 
         // Auto-shoot only when BOTH LB and RB are held.
