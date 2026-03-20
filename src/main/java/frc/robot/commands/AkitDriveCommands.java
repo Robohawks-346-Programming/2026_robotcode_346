@@ -48,7 +48,7 @@ private static final double DEADBAND = 0.1;
 private static final double ROTATION_DEADBAND = 0.05; // Smaller deadband for rotation
 private static final double SPEED_SCALE = 0.65; // Scale down max speed (0.25 = 25% of max speed)
 private static final double ROTATION_SCALE = 0.50; // Scale down max rotation (0.25 = 25% of max rotation)
-    private static final double ANGLE_KP = 0.5;
+    private static final double ANGLE_KP = .5;
     private static final double ANGLE_KD = 0.0;
     private static final double ANGLE_MAX_VELOCITY = 8.0;
     private static final double ANGLE_MAX_ACCELERATION = 20.0;
@@ -210,52 +210,80 @@ public static Command joystickDriveWithAim(
         Drive drive,
         DoubleSupplier xSupplier,
         DoubleSupplier ySupplier,
+        DoubleSupplier omegaSupplier, // Added back for manual control
+        Supplier<Boolean> aimButton,
         Supplier<Translation2d> aimTargetSupplier) {
 
-    // Create PID controller
+
     ProfiledPIDController angleController = new ProfiledPIDController(
-            ANGLE_KP,
-            0.0,
-            ANGLE_KD,
+            ANGLE_KP, 0.0, ANGLE_KD,
             new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
-    // Construct command
+
     return Commands.run(
             () -> {
-                // Get linear velocity
                 Translation2d linearVelocity = getLinearVelocityFromJoysticks(
                         xSupplier.getAsDouble(),
                         ySupplier.getAsDouble());
 
-                // Calculate the angle to the target point
-                Translation2d robotPoint = drive.getPose().getTranslation();
-                Rotation2d targetAngle = aimTargetSupplier.get().minus(robotPoint).getAngle();
 
-                // Calculate angular speed
-                double omega = angleController.calculate(
-                        drive.getRotation().getRadians(),
-                        targetAngle.getRadians());
+                boolean aimEnabled = false;
+                double aimErrorRad = 0.0;
+                double aimTargetDeg = drive.getRotation().getDegrees();
+                boolean aimWithinThreshold = false;
+                double omega;
+                if (aimButton.get()) {
+                    aimEnabled = true;
+                    // AUTO-AIM MODE
+                    Translation2d robotPoint = drive.getPose().getTranslation();
+                    Rotation2d targetAngle = aimTargetSupplier.get().minus(robotPoint).getAngle();
+                   targetAngle = targetAngle.plus(Rotation2d.fromDegrees(180));
+                  double error = targetAngle.minus(drive.getRotation()).getRadians();
+                    aimErrorRad = error;
+                    aimTargetDeg = targetAngle.getDegrees();
+                    aimWithinThreshold = ((Math.abs(error - Math.PI) ) )< Units.degreesToRadians(10);
 
-                // Convert to field relative speeds & send command
+                         
+                        if (((Math.abs(error- Math.PI) ) ) < Units.degreesToRadians(10)) {
+                  // omega = 0; 
+                        } else {
+                // omega = angleController.calculate(drive.getRotation().getRadians(), drive.getRotation().getRadians() + error);
+                }
+
+
+                
+
+                Logger.recordOutput("Drive/Aim/updatederror",Units.radiansToDegrees((Math.abs(error - Math.PI))));
+                Logger.recordOutput("Drive/Aim/Enabled", aimEnabled);
+                Logger.recordOutput("Drive/Aim/TargetAngleDeg", aimTargetDeg);
+                Logger.recordOutput("Drive/Aim/RobotAngleDeg", drive.getRotation().getDegrees());
+                Logger.recordOutput("Drive/Aim/ErrorRad", aimErrorRad);
+                Logger.recordOutput("Drive/Aim/ErrorDeg", Units.radiansToDegrees(aimErrorRad));
+                Logger.recordOutput("Drive/Aim/WithinThreshold", aimWithinThreshold);
+               
+
+
                 ChassisSpeeds speeds = new ChassisSpeeds(
-                        linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                        linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                        omega);
+                        linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE,
+                        linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * SPEED_SCALE,
+                        omegaSupplier.getAsDouble()*drive.getMaxAngularSpeedRadPerSec()*ROTATION_SCALE);
 
+
+                // Use current alliance for field-relative flipping
                 boolean isFlipped = DriverStation.getAlliance().isPresent()
                         && DriverStation.getAlliance().get() == Alliance.Red;
-
+               
                 drive.runVelocity(
                         ChassisSpeeds.fromFieldRelativeSpeeds(
                                 speeds,
                                 isFlipped
                                         ? drive.getRotation().plus(new Rotation2d(Math.PI))
                                         : drive.getRotation()));
-            },
+            }},
             drive)
-            // Reset PID controller when command starts
             .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+            
 }
     /**
      * Measures the velocity feedforward constants for the drive motors.

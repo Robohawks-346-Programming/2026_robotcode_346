@@ -475,8 +475,8 @@ public class RobotContainer {
         drive,
         () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
         () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
-        // () -> controller.getRightX(),
-        // () -> true,
+        () -> controller.getRightX(),
+        () -> true,
         () -> new Translation2d(11.915129661560059, 4.034599781036377)
     )
 );
