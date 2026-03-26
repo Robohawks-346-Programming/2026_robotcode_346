@@ -14,7 +14,7 @@ public final class IntakeArmConstants {
 
 	public static final double ARM_UP_ANGLE_DEG = 0.0;
 
-	public static final double ARM_DOWN_ANGLE_DEG = -77.38;
+	public static final double ARM_DOWN_ANGLE_DEG = -76.2;
 	// Back off the hard stop slightly when moving to the up position.
 	public static final double ARM_UP_OFFSET_DEG = 3.0;
 
@@ -32,7 +32,7 @@ public final class IntakeArmConstants {
 	public static final double ARM_KP = 0.03;
 	public static final double ARM_MAX_OUTPUT = 0.3;
 	// Minimum output to overcome static friction when moving.
-	public static final double ARM_MIN_MOVING_OUTPUT = 0.04;
+	public static final double ARM_MIN_MOVING_OUTPUT = 0.02;
 	public static final double ARM_ANGLE_TOLERANCE_DEG = 0.25;
 
 	public static final double ARM_MOTOR_SUPPLY_CURRENT_LIMIT_A = 35.0;

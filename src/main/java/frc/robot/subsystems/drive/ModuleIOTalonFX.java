@@ -72,7 +72,7 @@ import java.util.Queue;
  * customized here.
  */
 public class ModuleIOTalonFX implements ModuleIO {
-    private static final double DRIVE_SENSOR_SIGN = -1.0;
+    private static final double ODOMETRY_DRIVE_SIGN = -1.0;
 
 
     private final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
@@ -252,8 +252,8 @@ public class ModuleIOTalonFX implements ModuleIO {
 
         // Update drive inputs
         inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
-        inputs.drivePositionRad = DRIVE_SENSOR_SIGN * Units.rotationsToRadians(drivePosition.getValueAsDouble());
-        inputs.driveVelocityRadPerSec = DRIVE_SENSOR_SIGN * Units.rotationsToRadians(driveVelocity.getValueAsDouble());
+        inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
+        inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
         inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
 
@@ -271,7 +271,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         // Update odometry inputs
         inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
-                .mapToDouble((Double value) -> DRIVE_SENSOR_SIGN * Units.rotationsToRadians(value))
+                .mapToDouble((Double value) -> ODOMETRY_DRIVE_SIGN * Units.rotationsToRadians(value))
                 .toArray();
         inputs.odometryTurnPositions = turnPositionQueue.stream()
                 .map((Double value) -> Rotation2d.fromRotations(value))
