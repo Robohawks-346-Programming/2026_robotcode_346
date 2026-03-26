@@ -3,13 +3,25 @@ package frc.robot;
 
 
 
+
+
+
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
+
+
+
 
 
 
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+
+
+
+
 
 
 
@@ -26,6 +38,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+
+
+
+
 
 
 
@@ -62,6 +78,10 @@ import frc.robot.subsystems.vision.*;
 
 
 
+
+
+
+
 public class RobotContainer {
     private static final boolean DRIVE_ENABLED = true;
     // Red target provided by the team. Blue target is mirrored across field length.
@@ -76,7 +96,12 @@ public class RobotContainer {
     private static final double SHOOT_STAGE2_SECONDS = 0.5;
     private static final double HARD_AUTO_BACK_METERS = 0.25;
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
+    private static final double AIM_TRIGGER_THRESHOLD = 0.25;
     private boolean useFieldRelative = true;
+
+
+
+
 
 
 
@@ -92,8 +117,16 @@ public class RobotContainer {
 
 
 
+
+
+
+
     private final CommandXboxController controller;
     private final Joystick operatorControl;
+
+
+
+
 
 
 
@@ -118,8 +151,16 @@ public class RobotContainer {
 
 
 
+
+
+
+
     private final POVButton operatorPovUp;
     private final POVButton operatorPovDown;
+
+
+
+
 
 
 
@@ -129,8 +170,16 @@ public class RobotContainer {
 
 
 
+
+
+
+
    
     private boolean controlsInverted = false;
+
+
+
+
 
 
 
@@ -142,11 +191,19 @@ public class RobotContainer {
 
 
 
+
+
+
+
         int operatorPort = Constants.OperatorConstants.OPERATOR_CONTROLLER_PORT;
         if (Constants.currentMode == Constants.Mode.SIM && operatorPort == driverPort) {
             operatorPort = (driverPort == 0) ? 1 : 0;
         }
         operatorControl = new Joystick(operatorPort);
+
+
+
+
 
 
 
@@ -171,6 +228,10 @@ public class RobotContainer {
 
 
 
+
+
+
+
         operatorPovUp = new POVButton(operatorControl, 0);
         operatorPovDown = new POVButton(operatorControl, 180);
        
@@ -188,6 +249,10 @@ public class RobotContainer {
 
 
 
+
+
+
+
             case SIM:
                 drive = new Drive(
                         new GyroIO() {},
@@ -197,6 +262,10 @@ public class RobotContainer {
                         new ModuleIOSim(TunerConstants.BackRight));
                 vision = createVisionSystem();
                 break;
+
+
+
+
 
 
 
@@ -214,6 +283,10 @@ public class RobotContainer {
 
 
 
+
+
+
+
         ShooterIO shooterIO = switch (Constants.currentMode) {
             case REAL -> new ShooterIOReal();
             case SIM -> new ShooterIOSim();
@@ -221,6 +294,10 @@ public class RobotContainer {
         };
         shooter = new Shooter(shooterIO);
         autoMap = new ShooterAutoMap();
+
+
+
+
 
 
 
@@ -235,12 +312,20 @@ public class RobotContainer {
 
 
 
+
+
+
+
         IntakeArmIO intakeArmIO = switch (Constants.currentMode) {
             case REAL -> new IntakeArmIOReal();
             case SIM -> new IntakeArmIOSim();
             default -> new IntakeArmIO() {};
         };
         intakeArm = new IntakeArm(intakeArmIO);
+
+
+
+
 
 
 
@@ -256,14 +341,26 @@ public class RobotContainer {
 
 
 
+
+
+
+
         configureAutoCommands();
         autoChooser = createAutoChooserSafe();
 
 
 
 
+
+
+
+
         configureButtonBindings();
     }
+
+
+
+
 
 
 
@@ -275,6 +372,10 @@ public class RobotContainer {
         }
         return 0;
     }
+
+
+
+
 
 
 
@@ -296,6 +397,8 @@ public class RobotContainer {
     }
 
 
+
+
 // auto commands
     private void configureAutoCommands() {
         NamedCommands.registerCommand("Intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
@@ -303,9 +406,13 @@ public class RobotContainer {
         NamedCommands.registerCommand("intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
 
 
+
+
         Command armDownAuto = intakeArm.moveDownCommand();
         NamedCommands.registerCommand("ArmDown", armDownAuto);
         NamedCommands.registerCommand("armdown", armDownAuto);
+
+
 
 
         // Command autoShootMove = autoShootMoveCommand();
@@ -316,7 +423,15 @@ public class RobotContainer {
 
 
 
+
+
+
+
    
+
+
+
+
 
 
 
@@ -333,6 +448,10 @@ public class RobotContainer {
 
 
 
+
+
+
+
         return Commands.sequence(
             Commands.race(driveBack,Commands.waitSeconds(0.5)),
                
@@ -342,6 +461,10 @@ public class RobotContainer {
                 intake.runIntake().withTimeout(2),
                 stagedShootCommand6ft().withTimeout(AUTO_SHOOT_EVENT_SECONDS));
     }
+
+
+
+
 
 
 
@@ -379,15 +502,23 @@ public class RobotContainer {
 
 
 
+
+
+
+
     // private Translation2d getAllianceAimTarget() {
     //     return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
     //             ? RED_HUB_TARGET;
     // }
 
 
+
+
     // private double getAutoShootDistanceFeet() {
     //     return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget());
     // }
+
+
 
 
    
@@ -398,6 +529,8 @@ public class RobotContainer {
     //             shooter.runAutoShoot(this::getAutoShootDistanceFeet))
     //             .finallyDo(interrupted -> shooter.stop());
     // }
+
+
 
 
     private Command stagedShootCommand() {
@@ -444,6 +577,10 @@ public class RobotContainer {
 
 
 
+
+
+
+
     private Command stagedShootCommand7ft() {
         return Commands.sequence(
                
@@ -468,22 +605,35 @@ public class RobotContainer {
 
 
 
+
+
+
+
     private void configureButtonBindings() {
-		if (DRIVE_ENABLED) {
-			// Default command: field-relative drive; LT = aim at target (right stick disabled while aiming)
-			drive.setDefaultCommand(
-					AkitDriveCommands.joystickDriveWithAim(
-							drive,
-							() -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
-							() -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
-							() -> controlsInverted ? controller.getRightX() : -controller.getRightX(),
-							() -> useFieldRelative,
-							() -> controller.leftTrigger().getAsBoolean(),
-							RED_HUB_TARGET));
-		} else {
-			// Temporary drive disable for testing other mechanisms.
-			drive.setDefaultCommand(Commands.run(drive::stop, drive));
-		}
+        if (DRIVE_ENABLED) {
+            // Default command: field-relative drive; LT = aim at target (right stick disabled while aiming)
+            drive.setDefaultCommand(
+                        AkitDriveCommands.joystickDriveWithAim(
+                                drive,
+                                () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
+                                () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
+                                () -> controlsInverted ? controller.getRightX() : -controller.getRightX(),
+                                () -> useFieldRelative,
+                                () -> controller.getLeftTriggerAxis() > AIM_TRIGGER_THRESHOLD,
+                                RED_HUB_TARGET));
+        } else {
+            // Temporary drive disable for testing other mechanisms.
+            drive.setDefaultCommand(Commands.run(drive::stop, drive));
+        }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -504,7 +654,15 @@ public class RobotContainer {
 
 
 
+
+
+
+
         // Field-relative is always on (no toggle).
+
+
+
+
 
 
 
@@ -522,6 +680,10 @@ public class RobotContainer {
 
 
 
+
+
+
+
        
         // controller.start().onTrue(
         //         Commands.runOnce(
@@ -535,8 +697,16 @@ public class RobotContainer {
 
 
 
+
+
+
+
        
        
+
+
+
+
 
 
 
@@ -547,6 +717,8 @@ public class RobotContainer {
                 .onFalse(intake.stopIntake());
 
 
+
+
         // controller.rightTrigger()
         //         .whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
         //         .onFalse(shooter.stopCoralIntake());
@@ -554,7 +726,15 @@ public class RobotContainer {
 
 
 
+
+
+
+
        
+
+
+
+
 
 
 
@@ -562,10 +742,14 @@ public class RobotContainer {
        
      
      
+
+
 
 
      
                
+
+
 
 
         // Auto-shoot is on right trigger.
@@ -573,9 +757,17 @@ public class RobotContainer {
 
 
 
+
+
+
+
         // Wheel "X" lock only when LB + RB + LT are all held.
         // leftBumper.and(rightBumper).and(leftTrigger)
         //         .whileTrue(AkitDriveCommands.holdXLock(drive));
+
+
+
+
 
 
 
@@ -591,10 +783,18 @@ public class RobotContainer {
 
 
 
+
+
+
+
         // controller.povRight().onTrue(climbSubsystem.moveOneOutputRevolutionCommand());
         // controller.povLeft().onTrue(climbSubsystem.moveOneOutputRevolutionDownCommand());
        
        
+
+
+
+
 
 
 
@@ -608,10 +808,14 @@ public class RobotContainer {
         BUTTON_6.onTrue(intakeArm.moveUpCommand());
 
 
+
+
         BUTTON_7
                 .whileTrue(intakeArm.jogDownCommand())
                 .onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
         BUTTON_8.whileTrue(intake.runOuttake()).onFalse(intake.stopIntake());
+
+
 
 
     //    BUTTON_9.whileTrue(
@@ -620,7 +824,13 @@ public class RobotContainer {
     //                     .finallyDo(drive::disableXLockBrakeMode));
 
 
+
+
        
+
+
+
+
 
 
 
@@ -635,9 +845,17 @@ public class RobotContainer {
 
 
 
+
+
+
+
         // new POVButton(operatorControl, 90).onTrue(climbSubsystem.moveOneOutputRevolutionCommand());
         // new POVButton(operatorControl, 270).onTrue(climbSubsystem.moveOneOutputRevolutionDownCommand());
     }
+
+
+
+
 
 
 
@@ -649,9 +867,17 @@ public class RobotContainer {
 
 
 
+
+
+
+
     public void teleopInit() {
         // Teleop initialization if needed
     }
+
+
+
+
 
 
 
@@ -663,9 +889,17 @@ public class RobotContainer {
 
 
 
+
+
+
+
     public VisionLocalizer getVision() {
         return vision;
     }
+
+
+
+
 
 
 
@@ -677,9 +911,17 @@ public class RobotContainer {
 
 
 
+
+
+
+
     public Intake getIntake() {
         return intake;
     }
+
+
+
+
 
 
 
@@ -691,10 +933,26 @@ public class RobotContainer {
 
 
 
+
+
+
+
     // public climb getClimb() {
     //     return climbSubsystem;
     // }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
