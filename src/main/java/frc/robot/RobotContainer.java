@@ -86,9 +86,9 @@ public class RobotContainer {
     private static final boolean DRIVE_ENABLED = true;
     // Red target provided by the team. Blue target is mirrored across field length.
     private static final Translation2d RED_HUB_TARGET = new Translation2d(11.907, 4.030);
-    // private static final Translation2d BLUE_HUB_TARGET = new Translation2d(
-    //         VisionConstants.aprilTagLayout.getFieldLength() - RED_HUB_TARGET.getX(),
-    //         RED_HUB_TARGET.getY());
+    private static final Translation2d BLUE_HUB_TARGET = new Translation2d(
+            VisionConstants.aprilTagLayout.getFieldLength() - RED_HUB_TARGET.getX(),
+            RED_HUB_TARGET.getY());
     private static final double AUTO_INTAKE_EVENT_SECONDS = 5.0;
     private static final double AUTO_SHOOT_EVENT_SECONDS = 5.0;
     private static final double AUTO_SHOOT_MOVE_EVENT_SECONDS = 10.0; //for autos
@@ -97,6 +97,7 @@ public class RobotContainer {
     private static final double HARD_AUTO_BACK_METERS = 0.25;
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
     private static final double AIM_TRIGGER_THRESHOLD = 0.25;
+    public static final double AUTO_SHOOT_NAMED_SECONDS = 8.0;
     private boolean useFieldRelative = true;
 
 
@@ -400,25 +401,29 @@ public class RobotContainer {
 
 
 // auto commands
-    private void configureAutoCommands() {
-        NamedCommands.registerCommand("Intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
-       
-        NamedCommands.registerCommand("intake", intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS));
+     private void configureAutoCommands() {
+        Command autoIntake = intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS);
+        Command autoArmDown = intakeArm.moveDownCommand();
+        Command autoShoot = shooter.runAutoShoot(this::getAutoShootDistanceFeet)
+                .withTimeout(AUTO_SHOOT_NAMED_SECONDS)
+                .finallyDo(interrupted -> shooter.stop());
 
 
+        // Requested named auto commands
+        NamedCommands.registerCommand("AutoIntake", autoIntake);
+        NamedCommands.registerCommand("AutoArmDown", autoArmDown);
+        NamedCommands.registerCommand("AutoShoot", autoShoot);
 
 
-        Command armDownAuto = intakeArm.moveDownCommand();
-        NamedCommands.registerCommand("ArmDown", armDownAuto);
-        NamedCommands.registerCommand("armdown", armDownAuto);
-
-
-
-
-        // Command autoShootMove = autoShootMoveCommand();
-        // NamedCommands.registerCommand("Shoot", autoShootMove);
-        // NamedCommands.registerCommand("shoot", autoShootMove);
+        // Backward-compatible aliases
+        NamedCommands.registerCommand("Intake", autoIntake);
+        NamedCommands.registerCommand("intake", autoIntake);
+        NamedCommands.registerCommand("ArmDown", autoArmDown);
+        NamedCommands.registerCommand("armdown", autoArmDown);
+        NamedCommands.registerCommand("Shoot", autoShoot);
+        NamedCommands.registerCommand("shoot", autoShoot);
     }
+
 
 
 
@@ -506,17 +511,18 @@ public class RobotContainer {
 
 
 
-    // private Translation2d getAllianceAimTarget() {
-    //     return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-    //             ? RED_HUB_TARGET;
-    // }
+    private Translation2d getAllianceAimTarget() {
+        return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                ? RED_HUB_TARGET:
+                 BLUE_HUB_TARGET;
+    }
 
 
 
 
-    // private double getAutoShootDistanceFeet() {
-    //     return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget());
-    // }
+    private double getAutoShootDistanceFeet() {
+        return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget());
+    }
 
 
 
@@ -658,7 +664,7 @@ public class RobotContainer {
 
 
 
-        // Field-relative is always on (no toggle).
+        
 
 
 
@@ -719,9 +725,9 @@ public class RobotContainer {
 
 
 
-        // controller.rightTrigger()
-        //         .whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
-        //         .onFalse(shooter.stopCoralIntake());
+        controller.rightTrigger()
+                .whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
+                .onFalse(shooter.stopCoralIntake());
 
 
 

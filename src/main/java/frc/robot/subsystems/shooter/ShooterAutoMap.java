@@ -36,10 +36,10 @@ public final class ShooterAutoMap {
             new Marker(5.0, 3120.0, 4260.0),
             new Marker(6.0, 3360.0, 4560 ),
             new Marker(7.0, 3566.0, 4848.0),
-            new Marker(8.0, 3720, 5160),
-            new Marker(9.0, 4020, 5520),
+            new Marker(8.0, 3800, 5260),
+            new Marker(9.0, 4120, 5650),
             new Marker(10.0, 4140, 5700),
-            new Marker(11.0, 4560, 6000.0),
+            new Marker(11.0, 6000, 6000.0),
            
     };
 

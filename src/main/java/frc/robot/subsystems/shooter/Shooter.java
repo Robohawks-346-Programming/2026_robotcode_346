@@ -1,109 +1,125 @@
 package frc.robot.subsystems.shooter;
 
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+
 import java.util.function.DoubleSupplier;
+
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+
 public class Shooter extends SubsystemBase {
-	private final ShooterIO io;
-	private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
+    private final ShooterIO io;
+    private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
-	private double target2InchRpm = 0.0;
-	private double target3InchRpm = 0.0;
-	private double targetNeoPercent = 0.0;
-	private double targetRollerPercent = 0.0;
-	private double autoDistanceFeet = 0.0;
-	private double autoTwoInchRpm = 0.0;
-	private double autoThreeInchRpm = 0.0;
-	private boolean enabled = false;
 
-	public Shooter(ShooterIO io) {
-		this.io = io;
-	}
+    private double target2InchRpm = 0.0;
+    private double target3InchRpm = 0.0;
+    private double targetNeoPercent = 0.0;
+    private double targetRollerPercent = 0.0;
+    private double autoDistanceFeet = 0.0;
+    private double autoTwoInchRpm = 0.0;
+    private double autoThreeInchRpm = 0.0;
+    private boolean enabled = false;
 
-	public void setTargets(double twoInchRpm, double threeInchRpm, double neoPercent, double rollerPercent) {
-		target2InchRpm = twoInchRpm;
-		target3InchRpm = threeInchRpm;
-		targetNeoPercent = neoPercent;
-		targetRollerPercent = rollerPercent;
-		enabled = true;
-		io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
-	}
 
-	public void stop() {
-		enabled = false;
-		target2InchRpm = 0.0;
-		target3InchRpm = 0.0;
-		targetNeoPercent = 0.0;
-		targetRollerPercent = 0.0;
-		io.stop();
-	}
+    public Shooter(ShooterIO io) {
+        this.io = io;
+    }
 
-	private static double rpmToRps(double rpm) {
-		return rpm / 60.0;
-	}
 
-	@AutoLogOutput(key = "Shooter/AtVelocitySetpoint")
-	public boolean atVelocitySetpoint() {
-		double target2Rps = rpmToRps(target2InchRpm);
-		double target3Rps = rpmToRps(target3InchRpm);
+    public void setTargets(double twoInchRpm, double threeInchRpm, double neoPercent, double rollerPercent) {
+        target2InchRpm = twoInchRpm;
+        target3InchRpm = threeInchRpm;
+        targetNeoPercent = neoPercent;
+        targetRollerPercent = rollerPercent;
+        enabled = true;
+        io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
+    }
 
-		double twoInchError = Math.abs(inputs.velocity2InchRps - (target2Rps * ShooterConstants.TALON_2_INCH_DIR));
-		double threeInch1Error = Math.abs(inputs.velocity3Inch1Rps - (target3Rps * ShooterConstants.TALON_3_INCH_1_DIR));
-		double threeInch2Error = Math.abs(inputs.velocity3Inch2Rps - (target3Rps * ShooterConstants.TALON_3_INCH_2_DIR));
 
-		return twoInchError <= ShooterConstants.SPEED_TOLERANCE_RPS
-				&& threeInch1Error <= ShooterConstants.SPEED_TOLERANCE_RPS
-				&& threeInch2Error <= ShooterConstants.SPEED_TOLERANCE_RPS;
-	}
+    public void stop() {
+        enabled = false;
+        target2InchRpm = 0.0;
+        target3InchRpm = 0.0;
+        targetNeoPercent = 0.0;
+        targetRollerPercent = 0.0;
+        io.stop();
+    }
 
-	public Command runShoot() {
-		return Commands.run(
-				() -> setTargets(
-						ShooterConstants.TALON_2_INCH_TARGET_RPM,
-						ShooterConstants.TALON_3_INCH_TARGET_RPM,
-						ShooterConstants.NEO_550_SPEED_PERCENT,
-						ShooterConstants.ROLLER_SPEED_PERCENT),
-				this);
-	}
 
-	public Command runShoot11ft() {
-		return Commands.run(
-				() -> setTargets(
-						ShooterConstants.TALON_2_INCH_TARGET_RPM_11ft,
-						ShooterConstants.TALON_3_INCH_TARGET_RPM_11ft,
-						ShooterConstants.NEO_550_SPEED_PERCENT,
-						ShooterConstants.ROLLER_SPEED_PERCENT),
-				this);
-	}
+    private static double rpmToRps(double rpm) {
+        return rpm / 60.0;
+    }
 
-	public void setAutoTargetsFromDistanceFeet(double distanceFeet) {
-		autoDistanceFeet = distanceFeet;
-		autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
-		autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
-		setTargets(
-				autoTwoInchRpm,
-				autoThreeInchRpm,
-				ShooterConstants.NEO_550_SPEED_PERCENT,
-				ShooterConstants.ROLLER_SPEED_PERCENT);
-	}
-	public void stageAutoTargetsFromDistanceFeet(double distanceFeet) {
-		autoDistanceFeet = distanceFeet;
-		autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
-		autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
-		setTargets(
-				autoTwoInchRpm,
-				autoThreeInchRpm,
-				0.0,
-				0.0);
-	}
 
-	public Command runAutoShoot(DoubleSupplier distanceFeetSupplier) {
+    @AutoLogOutput(key = "Shooter/AtVelocitySetpoint")
+    public boolean atVelocitySetpoint() {
+        double target2Rps = rpmToRps(target2InchRpm);
+        double target3Rps = rpmToRps(target3InchRpm);
+
+
+        double twoInchError = Math.abs(inputs.velocity2InchRps - (target2Rps * ShooterConstants.TALON_2_INCH_DIR));
+        double threeInch1Error = Math.abs(inputs.velocity3Inch1Rps - (target3Rps * ShooterConstants.TALON_3_INCH_1_DIR));
+        double threeInch2Error = Math.abs(inputs.velocity3Inch2Rps - (target3Rps * ShooterConstants.TALON_3_INCH_2_DIR));
+
+
+        return twoInchError <= ShooterConstants.SPEED_TOLERANCE_RPS
+                && threeInch1Error <= ShooterConstants.SPEED_TOLERANCE_RPS
+                && threeInch2Error <= ShooterConstants.SPEED_TOLERANCE_RPS;
+    }
+
+
+    public Command runShoot() {
+        return Commands.run(
+                () -> setTargets(
+                        ShooterConstants.TALON_2_INCH_TARGET_RPM,
+                        ShooterConstants.TALON_3_INCH_TARGET_RPM,
+                        ShooterConstants.NEO_550_SPEED_PERCENT,
+                        ShooterConstants.ROLLER_SPEED_PERCENT),
+                this);
+    }
+
+
+    public Command runShoot11ft() {
+        return Commands.run(
+                () -> setTargets(
+                        ShooterConstants.TALON_2_INCH_TARGET_RPM_11ft,
+                        ShooterConstants.TALON_3_INCH_TARGET_RPM_11ft,
+                        ShooterConstants.NEO_550_SPEED_PERCENT,
+                        ShooterConstants.ROLLER_SPEED_PERCENT),
+                this);
+    }
+
+
+    public void setAutoTargetsFromDistanceFeet(double distanceFeet) {
+        autoDistanceFeet = distanceFeet;
+        autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
+        autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
+        setTargets(
+                autoTwoInchRpm,
+                autoThreeInchRpm,
+                ShooterConstants.NEO_550_SPEED_PERCENT,
+                ShooterConstants.ROLLER_SPEED_PERCENT);
+    }
+    public void stageAutoTargetsFromDistanceFeet(double distanceFeet) {
+        autoDistanceFeet = distanceFeet;
+        autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
+        autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
+        setTargets(
+                autoTwoInchRpm,
+                autoThreeInchRpm,
+                0.0,
+                0.0);
+    }
+
+
+    public Command runAutoShoot(DoubleSupplier distanceFeetSupplier) {
     return Commands.sequence(
         Commands.runOnce(
             () -> stageAutoTargetsFromDistanceFeet(distanceFeetSupplier.getAsDouble()),
@@ -117,30 +133,38 @@ public class Shooter extends SubsystemBase {
     );
 }
 
-	public Command runCoralIntake() {
-		return runShoot();
-	}
 
-	public Command stopCoralIntake() {
-		return Commands.runOnce(this::stop, this);
-	}
+    public Command runCoralIntake() {
+        return runShoot();
+    }
 
-	@Override
-	public void periodic() {
-		io.updateInputs(inputs);
-		Logger.processInputs("Shooter", inputs);
 
-		if (enabled) {
-			io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
-		}
+    public Command stopCoralIntake() {
+        return Commands.runOnce(this::stop, this);
+    }
 
-		Logger.recordOutput("Shooter/Enabled", enabled);
-		Logger.recordOutput("Shooter/Target2InchRPM", target2InchRpm);
-		Logger.recordOutput("Shooter/Target3InchRPM", target3InchRpm);
-		Logger.recordOutput("Shooter/TargetNeoPercent", targetNeoPercent);
-		Logger.recordOutput("Shooter/TargetRollerPercent", targetRollerPercent);
-		Logger.recordOutput("Shooter/AutoDistanceFeet", autoDistanceFeet);
-		Logger.recordOutput("Shooter/Auto2InchRPM", autoTwoInchRpm);
-		Logger.recordOutput("Shooter/Auto3InchRPM", autoThreeInchRpm);
-	}
+
+    @Override
+    public void periodic() {
+        io.updateInputs(inputs);
+        Logger.processInputs("Shooter", inputs);
+
+
+        if (enabled) {
+            io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
+        }
+
+
+        Logger.recordOutput("Shooter/Enabled", enabled);
+        Logger.recordOutput("Shooter/Target2InchRPM", target2InchRpm);
+        Logger.recordOutput("Shooter/Target3InchRPM", target3InchRpm);
+        Logger.recordOutput("Shooter/TargetNeoPercent", targetNeoPercent);
+        Logger.recordOutput("Shooter/TargetRollerPercent", targetRollerPercent);
+        Logger.recordOutput("Shooter/AutoDistanceFeet", autoDistanceFeet);
+        Logger.recordOutput("Shooter/Auto2InchRPM", autoTwoInchRpm);
+        Logger.recordOutput("Shooter/Auto3InchRPM", autoThreeInchRpm);
+    }
 }
+
+
+
