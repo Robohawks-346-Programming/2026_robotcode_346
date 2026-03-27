@@ -46,7 +46,7 @@ import org.littletonrobotics.junction.Logger;
 public class AkitDriveCommands {
     private static final double DEADBAND = 0.1;
     private static final double ROTATION_DEADBAND = 0.05; // Smaller deadband for rotation
-    private static final double SPEED_SCALE = 0.3; // Scale down max speed (0.3 = 30% of max speed)
+    private static final double SPEED_SCALE = 0.5; // Scale down max speed (0.3 = 30% of max speed)
     private static final double ANGLE_KP = 5.0;
     private static final double ANGLE_KD = 0.4;
     private static final double ANGLE_MAX_VELOCITY = 8.0;

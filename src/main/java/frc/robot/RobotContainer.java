@@ -623,7 +623,7 @@ public class RobotContainer {
                                 drive,
                                 () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
                                 () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
-                                () -> controlsInverted ? controller.getRightX() : -controller.getRightX(),
+                                () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
                                 () -> useFieldRelative,
                                 () -> controller.getLeftTriggerAxis() > AIM_TRIGGER_THRESHOLD,
                                 RED_HUB_TARGET));
@@ -725,7 +725,7 @@ public class RobotContainer {
 
 
 
-        controller.rightTrigger()
+        controller.rightBumper()
                 .whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
                 .onFalse(shooter.stopCoralIntake());
 
