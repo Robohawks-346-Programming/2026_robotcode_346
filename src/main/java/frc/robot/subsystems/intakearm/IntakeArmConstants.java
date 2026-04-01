@@ -14,7 +14,7 @@ public final class IntakeArmConstants {
 
 	public static final double ARM_UP_ANGLE_DEG = 0.0;
 
-	public static final double ARM_DOWN_ANGLE_DEG = -76.2;
+	public static final double ARM_DOWN_ANGLE_DEG = -76.5;
 	// Back off the hard stop slightly when moving to the up position.
 	public static final double ARM_UP_OFFSET_DEG = 3.0;
 

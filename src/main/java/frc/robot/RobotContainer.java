@@ -54,12 +54,13 @@ public class RobotContainer {
     private static final Translation2d BLUE_HUB_TARGET = new Translation2d(
             VisionConstants.aprilTagLayout.getFieldLength() - RED_HUB_TARGET.getX(),
             RED_HUB_TARGET.getY());
-    private static final double AUTO_INTAKE_EVENT_SECONDS = 5.0;
+    private static final double AUTO_INTAKE_EVENT_SECONDS = 10;
     private static final double AUTO_SHOOT_EVENT_SECONDS = 5.0;
-    private static final double AUTO_SHOOT_MOVE_EVENT_SECONDS = 10.0; // for autos
+    private static final double AUTO_INTAKE_EVENT_SECONDS_Comingback = 5.0;
+    private static final double AUTO_SHOOT_MOVE_EVENT_SECONDS = 10.0; // for hard auto
     private static final double SHOOT_STAGE1_SECONDS = 0.5;
     private static final double SHOOT_STAGE2_SECONDS = 0.5;
-    private static final double HARD_AUTO_BACK_METERS = 0.26;
+    private static final double HARD_AUTO_BACK_METERS = 0.26;//hard auto
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
     private static final double AIM_TRIGGER_THRESHOLD = 0.25;
     public static final double AUTO_SHOOT_NAMED_SECONDS = 8.0;
@@ -99,8 +100,10 @@ public class RobotContainer {
     private final LoggedDashboardChooser<Command> autoChooser;
 
     private boolean controlsInverted = false;
+        private double offset;
 
     public RobotContainer() {
+        offset = 0;
         int driverPort = selectDriverControllerPort();
         controller = new CommandXboxController(driverPort);
 
@@ -231,18 +234,35 @@ public class RobotContainer {
         }
     }
 
+   
     // auto commands
     private void configureAutoCommands() {
         Command autoIntake = intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS);
+        Command autoIntake5 = intake.runIntake().withTimeout(AUTO_INTAKE_EVENT_SECONDS_Comingback);
         Command autoArmDown = intakeArm.moveDownCommand();
         Command autoShoot = shooter.runAutoShoot(this::getAutoShootDistanceFeet)
                 .withTimeout(AUTO_SHOOT_NAMED_SECONDS)
                 .finallyDo(interrupted -> shooter.stop());
+        Command autoAim = AkitDriveCommands.joystickDriveWithAim(
+        drive,
+        () -> 0.0,
+         () -> 0.0,
+         () -> 0.0,
+         () -> true,
+         () -> true,
+         getAllianceAimTarget()
+        ).withTimeout(1);
+                
+                
+                        
 
         // Requested named auto commands
+        NamedCommands.registerCommand("AutoIntake5", autoIntake5);
         NamedCommands.registerCommand("AutoIntake", autoIntake);
         NamedCommands.registerCommand("AutoArmDown", autoArmDown);
         NamedCommands.registerCommand("AutoShoot", autoShoot);
+         NamedCommands.registerCommand("AutoAim", autoAim);
+        
 
         // Backward-compatible aliases
         NamedCommands.registerCommand("Intake", autoIntake);
@@ -309,7 +329,13 @@ public class RobotContainer {
     }
 
     private double getAutoShootDistanceFeet() {
-        return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget());
+        if(BUTTON_13.getAsBoolean()) {
+                offset -=1;
+        }
+        if(BUTTON_14.getAsBoolean()) {
+                offset +=1;
+        }
+        return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget(),offset);
     }
 
     // for auto shooting
@@ -395,7 +421,7 @@ public class RobotContainer {
                             () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
                             () -> useFieldRelative,
                             () -> controller.getLeftTriggerAxis() > AIM_TRIGGER_THRESHOLD,
-                            RED_HUB_TARGET));
+                            getAllianceAimTarget()));
         } else {
             // Temporary drive disable for testing other mechanisms.
             drive.setDefaultCommand(Commands.run(drive::stop, drive));
@@ -427,6 +453,9 @@ public class RobotContainer {
         // },
         // drive)
         // .ignoringDisable(true));
+        controller.rightTrigger()
+        .whileTrue(Commands.run(drive::stopWithX, drive));
+
 
         controller.y()
                 .whileTrue(intake.runIntake())
@@ -464,8 +493,7 @@ public class RobotContainer {
                 .onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
         BUTTON_8.whileTrue(intake.runOuttake()).onFalse(intake.stopIntake());
 
-        // BUTTON_9.whileTrue(
-        // Commands.run(drive::stopWithX, drive)
+       
         // .beforeStarting(drive::enableXLockBrakeMode)
         // .finallyDo(drive::disableXLockBrakeMode));
 

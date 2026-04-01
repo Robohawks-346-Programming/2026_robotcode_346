@@ -5,9 +5,53 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "AutoArmDown"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Bottomcycle_1"
+            "pathName": "Outpost1"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Outpost2"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoIntake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoArmDown"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Outpost3"
+                }
+              }
+            ]
           }
         },
         {
@@ -17,59 +61,16 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "AutoIntake5"
                 }
               },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Bottomcycle_2"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Bottomcycle_3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Bottomcycle_4"
+                  "name": "AutoShoot"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Bottomcycle_5"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         }
       ]

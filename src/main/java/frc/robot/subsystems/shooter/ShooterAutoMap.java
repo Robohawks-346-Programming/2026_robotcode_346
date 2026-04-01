@@ -4,6 +4,7 @@ package frc.robot.subsystems.shooter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.ToDoubleFunction;
+import org.littletonrobotics.junction.Logger;
 
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -26,9 +27,9 @@ public final class ShooterAutoMap {
      * Shooter center is 6.261 inches behind robot center (negative X in robot frame).
      * Distances for auto-shot map are measured from this point.
      */
-    private static final Transform2d SHOOTER_CENTER_FROM_ROBOT_CENTER = new Transform2d(
-            new Translation2d(-Units.inchesToMeters(6.261), 0.0),
-            new Rotation2d());
+    // private static final Transform2d SHOOTER_CENTER_FROM_ROBOT_CENTER = new Transform2d(
+    //         new Translation2d(-Units.inchesToMeters(14 ), 0.0),
+    //         new Rotation2d());
 
 
    
@@ -69,10 +70,15 @@ public final class ShooterAutoMap {
     }
 
 
-    public static double getDistanceFeet(Pose2d robotPose, Translation2d targetTranslation) {
+    public static double getDistanceFeet(Pose2d robotPose, Translation2d targetTranslation, double offset) {
+            Logger.recordOutput("Shooter offset", offset);
+            Transform2d SHOOTER_CENTER_FROM_ROBOT_CENTER = new Transform2d(
+            new Translation2d(-Units.inchesToMeters(6.261 +offset), 0.0),
+            new Rotation2d());
         Translation2d shooterTranslation = robotPose
                 .transformBy(SHOOTER_CENTER_FROM_ROBOT_CENTER)
                 .getTranslation();
+        Logger.recordOutput("Distance hub", Units.metersToFeet(shooterTranslation.getDistance(targetTranslation)));
         return Units.metersToFeet(shooterTranslation.getDistance(targetTranslation));
     }
 

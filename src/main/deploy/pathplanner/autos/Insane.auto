@@ -5,9 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Bottom_Path1"
+            "name": "AutoArmDown"
           }
         },
         {
@@ -17,13 +17,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Bottom_Path2"
+                  "pathName": "Insane1"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "AutoIntake5"
                 }
               }
             ]
@@ -32,25 +32,26 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Bottom_Path3"
+            "pathName": "Insane2"
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Bottom_Path4"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climb"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoShoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoIntake5"
+                }
+              }
+            ]
           }
         }
       ]
