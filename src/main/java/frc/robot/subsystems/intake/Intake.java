@@ -42,6 +42,12 @@ public class Intake extends SubsystemBase {
 				this::stop,
 				this);
 	}
+	public Command runOuttakeWithRollers() {
+		return Commands.startEnd(
+				() -> setPercent(-100),
+				this::stop,
+				this);
+	}
 
 	public Command stopIntake() {
 		return Commands.runOnce(this::stop, this);

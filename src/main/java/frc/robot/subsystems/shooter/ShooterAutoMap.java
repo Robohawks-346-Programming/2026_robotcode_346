@@ -1,10 +1,14 @@
 package frc.robot.subsystems.shooter;
 
 
+
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.ToDoubleFunction;
 import org.littletonrobotics.junction.Logger;
+
+
 
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,13 +18,19 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
 
+
+
 public final class ShooterAutoMap {
     public ShooterAutoMap() {
     }
 
 
+
+
     private record Marker(double distanceFeet, double threeInchPercent, double twoInchPercent) {
     }
+
+
 
 
     /**
@@ -30,6 +40,8 @@ public final class ShooterAutoMap {
     // private static final Transform2d SHOOTER_CENTER_FROM_ROBOT_CENTER = new Transform2d(
     //         new Translation2d(-Units.inchesToMeters(14 ), 0.0),
     //         new Rotation2d());
+
+
 
 
    
@@ -45,9 +57,13 @@ public final class ShooterAutoMap {
     };
 
 
+
+
     static {
         Arrays.sort(MARKERS, Comparator.comparingDouble(Marker::distanceFeet));
     }
+
+
 
 
     public static double getTwoInchRpm(double distanceFeet) {
@@ -55,9 +71,13 @@ public final class ShooterAutoMap {
 }
 
 
+
+
     public static double getThreeInchRpm(double distanceFeet) {
     return getPercent(distanceFeet, Marker::threeInchPercent);
 }
+
+
 
 
     public static double getTwoInchPercent(double distanceFeet) {
@@ -65,9 +85,32 @@ public final class ShooterAutoMap {
     }
 
 
+
+
     public static double getThreeInchPercent(double distanceFeet) {
         return getPercent(distanceFeet, Marker::threeInchPercent);
     }
+
+
+
+
+    public static double getShootDelaySeconds(double distanceFeet) {
+        double startFeet = ShooterConstants.FAR_SHOOT_DELAY_RAMP_START_FEET;
+        double endFeet = ShooterConstants.FAR_SHOOT_DELAY_RAMP_END_FEET;
+        if (distanceFeet <= startFeet) {
+            return ShooterConstants.SHOOT_DELAY_SECONDS;
+        }
+        if (distanceFeet >= endFeet) {
+            return ShooterConstants.FAR_SHOOT_DELAY_SECONDS;
+        }
+
+
+        double t = (distanceFeet - startFeet) / (endFeet - startFeet);
+        return ShooterConstants.SHOOT_DELAY_SECONDS
+                + t * (ShooterConstants.FAR_SHOOT_DELAY_SECONDS - ShooterConstants.SHOOT_DELAY_SECONDS);
+    }
+
+
 
 
     public static double getDistanceFeet(Pose2d robotPose, Translation2d targetTranslation, double offset) {
@@ -83,6 +126,8 @@ public final class ShooterAutoMap {
     }
 
 
+
+
     private static double getPercent(double distanceFeet, ToDoubleFunction<Marker> selector) {
         if (MARKERS.length == 0) {
             return 0.0;
@@ -92,9 +137,13 @@ public final class ShooterAutoMap {
         }
 
 
+
+
         if (distanceFeet <= MARKERS[0].distanceFeet()) {
             return interpolate(distanceFeet, MARKERS[0], MARKERS[1], selector);
         }
+
+
 
 
         for (int i = 0; i < MARKERS.length - 1; i++) {
@@ -106,9 +155,13 @@ public final class ShooterAutoMap {
         }
 
 
+
+
         int last = MARKERS.length - 1;
         return interpolate(distanceFeet, MARKERS[last - 1], MARKERS[last], selector);
     }
+
+
 
 
     private static double interpolate(double x, Marker a, Marker b, ToDoubleFunction<Marker> selector) {
@@ -120,6 +173,12 @@ public final class ShooterAutoMap {
         return selector.applyAsDouble(a) + t * (selector.applyAsDouble(b) - selector.applyAsDouble(a));
     }
 }
+
+
+
+
+
+
 
 
 

@@ -107,6 +107,18 @@ public class Shooter extends SubsystemBase {
                 ShooterConstants.NEO_550_SPEED_PERCENT,
                 ShooterConstants.ROLLER_SPEED_PERCENT);
     }
+
+    public void runRollers(double percent) {
+    enabled = true;
+    targetRollerPercent = percent;
+
+    
+    target2InchRpm = 0.0;
+    target3InchRpm = 0.0;
+    targetNeoPercent = 0.0;
+
+    io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
+}
     public void stageAutoTargetsFromDistanceFeet(double distanceFeet) {
         autoDistanceFeet = distanceFeet;
         autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
@@ -142,7 +154,17 @@ public class Shooter extends SubsystemBase {
     public Command stopCoralIntake() {
         return Commands.runOnce(this::stop, this);
     }
-
+    
+    public Command runRollersCommand(double percent) {
+    return Commands.run(
+        () -> runRollers(percent)
+    );
+}
+public void stopRollers() {
+    targetRollerPercent = 0.0;
+    enabled = false;
+    io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
+}
 
     @Override
     public void periodic() {

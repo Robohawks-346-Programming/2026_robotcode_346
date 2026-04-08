@@ -11,63 +11,44 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Outpost1"
-          }
-        },
-        {
           "type": "parallel",
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Outpost2"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Outpost1"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Outpost2"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Outpost3"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "AutoShoot"
+                      }
+                    }
+                  ]
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "AutoIntake"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoArmDown"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Outpost3"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoIntake5"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoShoot"
                 }
               }
             ]

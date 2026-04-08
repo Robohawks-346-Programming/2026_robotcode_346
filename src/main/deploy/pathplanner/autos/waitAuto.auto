@@ -11,9 +11,21 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
           "type": "parallel",
           "data": {
             "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoIntake"
+                }
+              },
               {
                 "type": "sequential",
                 "data": {
@@ -21,34 +33,28 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Insane1"
+                        "pathName": "Waitauto"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Insane2"
+                        "pathName": "Waitauto1"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Waitauto2"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "autoShootDepot"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Insane3"
+                        "name": "AutoShoot"
                       }
                     }
                   ]
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoIntake"
                 }
               }
             ]

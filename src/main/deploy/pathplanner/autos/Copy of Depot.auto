@@ -11,56 +11,50 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Depot11"
-          }
-        },
-        {
           "type": "parallel",
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "AutoIntake5"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Depot21"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Depot31"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Depot41"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoShoot"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot11"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot21"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot31"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot41"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "AutoShoot"
+                      }
+                    }
+                  ]
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "AutoIntake5"
+                  "name": "AutoIntake"
                 }
               }
             ]

@@ -147,8 +147,8 @@ public class AkitDriveCommands {
 
         private static final double AIM_KP = 2.5;
         private static final double AIM_KD = 0.4;
-        private static final double AIM_ANGLE_TOLERANCE_RAD = Math.toRadians(2);
-        private static final double AIM_UNLOCK_TOLERANCE_RAD = Math.toRadians(2);
+        private static final double AIM_ANGLE_TOLERANCE_RAD = Math.toRadians(1);
+        private static final double AIM_UNLOCK_TOLERANCE_RAD = Math.toRadians(1);
         private static final double AIM_MAX_SPEED_SCALE = 0.8;
         private static final double AIM_MAX_ACCEL_RAD_PER_SEC2 = 8.0;
         private static final double AIM_OMEGA_SLEW_RAD_PER_SEC2 = 9.0;

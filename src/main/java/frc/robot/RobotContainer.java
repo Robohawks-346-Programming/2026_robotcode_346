@@ -54,8 +54,8 @@ public class RobotContainer {
     private static final Translation2d BLUE_HUB_TARGET = new Translation2d(
             VisionConstants.aprilTagLayout.getFieldLength() - RED_HUB_TARGET.getX(),
             RED_HUB_TARGET.getY());
-    private static final double AUTO_INTAKE_EVENT_SECONDS = 10;
-    private static final double AUTO_SHOOT_EVENT_SECONDS = 5.0;
+    private static final double AUTO_INTAKE_EVENT_SECONDS = 20;
+    private static final double AUTO_SHOOT_EVENT_SECONDS = 11.0;
     private static final double AUTO_INTAKE_EVENT_SECONDS_Comingback = 5.0;
     private static final double AUTO_SHOOT_MOVE_EVENT_SECONDS = 10.0; // for hard auto
     private static final double SHOOT_STAGE1_SECONDS = 0.5;
@@ -63,7 +63,8 @@ public class RobotContainer {
     private static final double HARD_AUTO_BACK_METERS = 0.26;//hard auto
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
     private static final double AIM_TRIGGER_THRESHOLD = 0.25;
-    public static final double AUTO_SHOOT_NAMED_SECONDS = 8.0;
+    public static final double AUTO_SHOOT_NAMED_SECONDS = 11.0;
+    public static final double AUTO_SHOOT_NAMED_SECONDS_DEPOT = 5.0;
     private boolean useFieldRelative = true;
 
     private final Drive drive;
@@ -243,6 +244,9 @@ public class RobotContainer {
         Command autoShoot = shooter.runAutoShoot(this::getAutoShootDistanceFeet)
                 .withTimeout(AUTO_SHOOT_NAMED_SECONDS)
                 .finallyDo(interrupted -> shooter.stop());
+        Command autoShootDepot = shooter.runAutoShoot(this::getAutoShootDistanceFeet)
+                .withTimeout(AUTO_SHOOT_NAMED_SECONDS_DEPOT)
+                .finallyDo(interrupted -> shooter.stop());
         Command autoAim = AkitDriveCommands.joystickDriveWithAim(
         drive,
         () -> 0.0,
@@ -262,6 +266,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("AutoArmDown", autoArmDown);
         NamedCommands.registerCommand("AutoShoot", autoShoot);
          NamedCommands.registerCommand("AutoAim", autoAim);
+         NamedCommands.registerCommand("autoShootDepot", autoShootDepot);
         
 
         // Backward-compatible aliases
@@ -492,6 +497,17 @@ public class RobotContainer {
                 .whileTrue(intakeArm.jogDownCommand())
                 .onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
         BUTTON_8.whileTrue(intake.runOuttake()).onFalse(intake.stopIntake());
+        BUTTON_9
+    .whileTrue(
+        intake.runOuttakeWithRollers()
+            .alongWith(shooter.runRollersCommand(-50.0)) 
+    )
+    .onFalse(
+        Commands.runOnce(() -> {
+            intake.stopIntake();
+            shooter.stopRollers();
+        })
+    );
 
        
         // .beforeStarting(drive::enableXLockBrakeMode)

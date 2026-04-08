@@ -15,8 +15,11 @@ public final class ShooterConstants {
 	public static final double TALON_2_INCH_TARGET_RPM = 3760.0; 
 	public static final double TALON_3_INCH_TARGET_RPM = 2620.0;
 	public static final double NEO_550_SPEED_PERCENT = 100.0;
-	public static final double ROLLER_SPEED_PERCENT = 100.0;
+	public static final double ROLLER_SPEED_PERCENT = 75.0;
 	public static final double SHOOT_DELAY_SECONDS = 0.6;
+	public static final double FAR_SHOOT_DELAY_SECONDS = 0.8;
+	public static final double FAR_SHOOT_DELAY_RAMP_END_FEET = 9.0;
+	public static final double FAR_SHOOT_DELAY_RAMP_START_FEET = 8.5;
 
 	public static final double TALON_2_INCH_DIR = 1.0;
 	public static final double TALON_3_INCH_1_DIR = 1.0;
@@ -47,4 +50,6 @@ public final class ShooterConstants {
 	public static final double TALON_3_INCH_TARGET_RPM_8ft = 3720;
 	public static final double TALON_2_INCH_TARGET_RPM_11ft = 6000.0;
 	public static final double TALON_3_INCH_TARGET_RPM_11ft = 4560.0;
+	
+	
 }
