@@ -19,7 +19,7 @@ public final class Constants {
 	public static final Mode simMode = Mode.SIM;
 	public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 	public static final String DRIVETRAIN_CAN_BUS = "Drivetrain";
-	public static final String SUBSYSTEMS_CAN_BUS = "Subsystems";
+	public static final String SUBSYSTEMS_CAN_BUS = "rio";
 
 	public static final class LedTestConstants {
 		public static final boolean ENABLED = true;

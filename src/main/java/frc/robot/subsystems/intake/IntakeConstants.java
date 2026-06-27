@@ -12,6 +12,6 @@ public final class IntakeConstants {
 	// Time for open loop soft start (handled by motor controller)
 	public static final double INTAKE_OPEN_LOOP_RAMP_SECONDS = 0.65;
 
-	public static final double INTAKE_SUPPLY_CURRENT_LIMIT_A = 40.0;
+	public static final double INTAKE_SUPPLY_CURRENT_LIMIT_A = 45.0;
 	public static final double INTAKE_STATOR_CURRENT_LIMIT_A = 80.0;
 }

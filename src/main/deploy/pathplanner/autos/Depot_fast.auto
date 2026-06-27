@@ -21,13 +21,25 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "DepotBack"
+                        "pathName": "Depot11_fast"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "DepotBack1"
+                        "pathName": "Depot21_fast"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot31_fast"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot41_fast"
                       }
                     },
                     {
@@ -39,7 +51,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "DepotBack2"
+                        "pathName": "Depot51_fast"
                       }
                     }
                   ]

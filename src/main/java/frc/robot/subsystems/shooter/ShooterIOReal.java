@@ -69,9 +69,9 @@ public class ShooterIOReal implements ShooterIO {
 		rollerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 		rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 		rollerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-		rollerConfig.CurrentLimits.SupplyCurrentLimit = ShooterConstants.SHOOTER_SUPPLY_CURRENT_LIMIT_A;
+		rollerConfig.CurrentLimits.SupplyCurrentLimit = ShooterConstants.SHOOTER_FEEDER_SUPPLY_CURRENT_LIMIT_A;
 		rollerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-		rollerConfig.CurrentLimits.StatorCurrentLimit = ShooterConstants.SHOOTER_STATOR_CURRENT_LIMIT_A;
+		rollerConfig.CurrentLimits.StatorCurrentLimit = ShooterConstants.SHOOTER_FEEDER_STATOR_CURRENT_LIMIT_A;
 		rollerConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.0;
 		rollerConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = ShooterConstants.FEEDER_ROLLER_OPEN_LOOP_RAMP_SECONDS;
 

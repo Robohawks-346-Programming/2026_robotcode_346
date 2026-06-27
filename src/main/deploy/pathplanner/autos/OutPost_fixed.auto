@@ -21,25 +21,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot11"
+                        "pathName": "Outpost1"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot21"
+                        "pathName": "Outpost2"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot31"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Depot41"
+                        "pathName": "Outpost3_fixed"
                       }
                     },
                     {

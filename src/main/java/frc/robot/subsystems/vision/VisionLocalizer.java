@@ -19,6 +19,7 @@ import frc.robot.subsystems.vision.VisionIO.SingleTagObservation;
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * Localizes the robot using camera measurements. Periodically updates camera
@@ -29,6 +30,8 @@ public class VisionLocalizer extends SubsystemBase {
 	private final VisionIO[] io;
 	private final VisionIOInputsAutoLogged[] inputs;
 	private final Alert[] disconnectedAlerts;
+	LoggedNetworkNumber linearStd = new LoggedNetworkNumber("Tuning/linearStdDevs", 0.3);
+	LoggedNetworkNumber angularStd = new LoggedNetworkNumber("Tuning/angularStdDevs", 0.4);
 	// avoid NullPointerExceptions by setting a default no-op
 	private VisionConsumer consumer;
 	private Drive drive;
@@ -221,10 +224,10 @@ public class VisionLocalizer extends SubsystemBase {
 			VisionIO.PoseObservation observation, int cameraIndex) {
 		double avgDistanceFromTarget = observation.averageTagDistance();
 		int numTags = observation.tagCount();
-		double linearStdDev = 0.02
+		double linearStdDev = linearStd.get()
 				* Math.pow(avgDistanceFromTarget, 2)
 				/ numTags;
-		double angularStdDev = 0.06
+		double angularStdDev = angularStd.get()
 				* Math.pow(avgDistanceFromTarget, 2)
 				/ numTags;
 

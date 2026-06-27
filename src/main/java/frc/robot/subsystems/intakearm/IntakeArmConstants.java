@@ -14,7 +14,7 @@ public final class IntakeArmConstants {
 
 	public static final double ARM_UP_ANGLE_DEG = 0.0;
 
-	public static final double ARM_DOWN_ANGLE_DEG = -76.5;
+	public static final double ARM_DOWN_ANGLE_DEG = -78;
 	// Back off the hard stop slightly when moving to the up position.
 	public static final double ARM_UP_OFFSET_DEG = 3.0;
 
@@ -35,7 +35,8 @@ public final class IntakeArmConstants {
 	public static final double ARM_MIN_MOVING_OUTPUT = 0.02;
 	public static final double ARM_ANGLE_TOLERANCE_DEG = 0.25;
 
-	public static final double ARM_MOTOR_SUPPLY_CURRENT_LIMIT_A = 35.0;
-	public static final double ARM_MOTOR_STATOR_CURRENT_LIMIT_A = 70.0;
+	public static final double ARM_MOTOR_SUPPLY_CURRENT_LIMIT_A = 25.0;
+	public static final double ARM_MOTOR_STATOR_CURRENT_LIMIT_A = 55.0;
 	public static final double ARM_JOG_STEP_DEG = 1.0;
+	public static final double ARM_MID_ANGLE_DEG = -47.0;
 }

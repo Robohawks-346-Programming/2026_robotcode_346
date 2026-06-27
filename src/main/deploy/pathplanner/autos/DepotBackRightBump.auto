@@ -21,31 +21,25 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot11"
+                        "pathName": "DepotBack"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot21"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Depot31"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Depot41"
+                        "pathName": "DepotBack1"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "AutoShoot"
+                        "name": "autoShootDepot"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "DepotBack2_forrightbump"
                       }
                     }
                   ]

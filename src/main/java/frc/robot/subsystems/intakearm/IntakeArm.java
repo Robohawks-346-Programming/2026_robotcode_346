@@ -81,6 +81,17 @@ public class IntakeArm extends SubsystemBase {
 		state = IntakeArmState.MOVING_DOWN;
 	}
 
+	public void moveToMid() {
+	targetAngleDeg = MathUtil.clamp(
+			IntakeArmConstants.ARM_MID_ANGLE_DEG,
+			ARM_MIN_ANGLE_DEG + IntakeArmConstants.ARM_SOFT_LIMIT_BUFFER_DEG,
+			ARM_MAX_ANGLE_DEG - IntakeArmConstants.ARM_SOFT_LIMIT_BUFFER_DEG);
+
+	state = (inputs.absoluteAngleDeg < targetAngleDeg)
+			? IntakeArmState.MOVING_DOWN
+			: IntakeArmState.MOVING_UP;
+}
+
 	public void stop() {
 		state = IntakeArmState.IDLE;
 		io.stop();
@@ -120,6 +131,10 @@ public class IntakeArm extends SubsystemBase {
 	public Command moveDownCommand() {
 		return Commands.runOnce(this::moveDown, this);
 	}
+	
+	public Command moveToMidCommand() {
+	return Commands.runOnce(this::moveToMid, this);
+}
 
 
 	public Command jogUpCommand() {

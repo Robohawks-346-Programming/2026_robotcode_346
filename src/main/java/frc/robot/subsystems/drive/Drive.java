@@ -32,6 +32,7 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
@@ -114,6 +115,11 @@ public class Drive extends SubsystemBase {
             };
     private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation,
             lastModulePositions, new Pose2d());
+        
+    // @AutoLogOutput(key = " Odemetry/Robot3D")
+    // public Pose3d getPose3d(){
+    //     return new Pose3d(getPose());
+    // }
 
 
     public Drive(

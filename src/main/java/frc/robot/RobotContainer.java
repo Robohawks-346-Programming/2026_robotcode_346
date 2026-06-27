@@ -7,18 +7,15 @@ import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
-
-import frc.robot.Constants;
 import frc.robot.commands.AkitDriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -45,7 +42,11 @@ import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.vision.*;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonReal;
+import frc.robot.subsystems.vision.VisionIOPhotonSim;
+import frc.robot.subsystems.vision.VisionLocalizer;
 
 public class RobotContainer {
     private static final boolean DRIVE_ENABLED = true;
@@ -328,18 +329,17 @@ public class RobotContainer {
     }
 
     private Translation2d getAllianceAimTarget() {
-        return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                ? RED_HUB_TARGET
-                : BLUE_HUB_TARGET;
+        if (DriverStation.getAlliance().get() == Alliance.Red){
+                return RED_HUB_TARGET;
+        } else {
+                return BLUE_HUB_TARGET;
+        }
+                
+
     }
 
     private double getAutoShootDistanceFeet() {
-        if(BUTTON_13.getAsBoolean()) {
-                offset -=1;
-        }
-        if(BUTTON_14.getAsBoolean()) {
-                offset +=1;
-        }
+       
         return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget(),offset);
     }
 
@@ -486,12 +486,12 @@ public class RobotContainer {
         // controller.povRight().onTrue(climbSubsystem.moveOneOutputRevolutionCommand());
         // controller.povLeft().onTrue(climbSubsystem.moveOneOutputRevolutionDownCommand());
 
-        BUTTON_1.whileTrue(intake.runIntake()).onFalse(intake.stopIntake());
+        BUTTON_1.whileTrue(intake.runIntake().alongWith(intakeArm.jogDownCommand())).onFalse(intake.stopIntake());
         BUTTON_2.whileTrue(stagedShootCommand()).onFalse(shooter.stopCoralIntake());
         BUTTON_3.whileTrue(stagedShootCommand6ft()).onFalse(shooter.stopCoralIntake());
         BUTTON_4.whileTrue(stagedShootCommand7ft()).onFalse(shooter.stopCoralIntake());
         BUTTON_5.onTrue(intakeArm.moveDownCommand());
-        BUTTON_6.onTrue(intakeArm.moveUpCommand());
+        BUTTON_14.onTrue(intakeArm.moveUpCommand());
 
         BUTTON_7
                 .whileTrue(intakeArm.jogDownCommand())
@@ -508,6 +508,18 @@ public class RobotContainer {
             shooter.stopRollers();
         })
     );
+    
+
+    
+     BUTTON_10.onTrue(shooter.runShootalltime());
+     BUTTON_11.onTrue(shooter.runShootalltimeStop());
+     BUTTON_12.whileTrue(shooter.runShootFeederCool().alongWith(intake.runOuttakeWithRollers()))
+     .onFalse(shooter.stopCoralIntake().alongWith(intake.stopIntake()));
+     BUTTON_13.whileTrue(intakeArm.jogUpCommand())
+                .onFalse(Commands.runOnce(intakeArm::stop, intakeArm));
+     BUTTON_6.onTrue(intakeArm.moveToMidCommand());
+      BUTTON_16.whileTrue(intake.smartIntakeHold().alongWith(intakeArm.jogDownCommand())).onFalse(intake.stopIntake());
+
 
        
         // .beforeStarting(drive::enableXLockBrakeMode)

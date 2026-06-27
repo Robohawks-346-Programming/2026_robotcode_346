@@ -84,7 +84,15 @@ public class Shooter extends SubsystemBase {
                         ShooterConstants.ROLLER_SPEED_PERCENT),
                 this);
     }
-
+    public Command runShootFeederCool() {
+        return Commands.run(
+                () -> setTargets(
+                        ShooterConstants.TALON_2_INCH_TARGET_RPM_7ft,
+                        ShooterConstants.TALON_3_INCH_TARGET_RPM_7ft,
+                        ShooterConstants.NEO_550_SPEED_PERCENT,
+                        -ShooterConstants.ROLLER_SPEED_PERCENT),
+                this);
+    }
 
     public Command runShoot11ft() {
         return Commands.run(
@@ -96,6 +104,24 @@ public class Shooter extends SubsystemBase {
                 this);
     }
 
+    public Command runShootalltime() {
+        return Commands.run(
+                () -> setTargets(
+                        1000,
+                        1000,
+                        0.0,
+                        0.0),
+                this);
+    }
+     public Command runShootalltimeStop() {
+        return Commands.run(
+                () -> setTargets(
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0),
+                this);
+    }
 
     public void setAutoTargetsFromDistanceFeet(double distanceFeet) {
         autoDistanceFeet = distanceFeet;
@@ -115,10 +141,11 @@ public class Shooter extends SubsystemBase {
     
     target2InchRpm = 0.0;
     target3InchRpm = 0.0;
-    targetNeoPercent = 0.0;
+    targetNeoPercent = ShooterConstants.NEO_550_SPEED_PERCENT_OUTTAKE;
 
     io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
 }
+
     public void stageAutoTargetsFromDistanceFeet(double distanceFeet) {
         autoDistanceFeet = distanceFeet;
         autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
@@ -162,6 +189,8 @@ public class Shooter extends SubsystemBase {
 }
 public void stopRollers() {
     targetRollerPercent = 0.0;
+    targetNeoPercent = 0.0;
+
     enabled = false;
     io.setTargets(target2InchRpm, target3InchRpm, targetNeoPercent, targetRollerPercent);
 }

@@ -21,31 +21,31 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot11"
+                        "pathName": "Depot11_fast"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot21"
+                        "pathName": "Depot21_fast"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Depot31"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Depot41"
+                        "pathName": "Depot31_fast"
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "AutoShoot"
+                        "name": "autoShootDepot"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot41_fast"
                       }
                     }
                   ]
