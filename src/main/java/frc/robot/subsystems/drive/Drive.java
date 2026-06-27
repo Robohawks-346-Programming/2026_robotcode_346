@@ -116,10 +116,10 @@ public class Drive extends SubsystemBase {
     private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation,
             lastModulePositions, new Pose2d());
         
-    // @AutoLogOutput(key = " Odemetry/Robot3D")
-    // public Pose3d getPose3d(){
-    //     return new Pose3d(getPose());
-    // }
+    @AutoLogOutput(key = " Odemetry/Robot3D")
+    public Pose3d getPose3d(){
+        return new Pose3d(getPose());
+    }
 
 
     public Drive(

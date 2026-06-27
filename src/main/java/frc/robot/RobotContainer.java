@@ -329,14 +329,12 @@ public class RobotContainer {
     }
 
     private Translation2d getAllianceAimTarget() {
-        if (DriverStation.getAlliance().get() == Alliance.Red){
-                return RED_HUB_TARGET;
-        } else {
-                return BLUE_HUB_TARGET;
-        }
-                
+    Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
-    }
+    return alliance == Alliance.Red
+            ? RED_HUB_TARGET
+            : BLUE_HUB_TARGET;
+}
 
     private double getAutoShootDistanceFeet() {
        
