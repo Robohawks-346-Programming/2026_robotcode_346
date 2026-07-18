@@ -72,7 +72,7 @@ import java.util.Queue;
  * customized here.
  */
 public class ModuleIOTalonFX implements ModuleIO {
-    private static final double ODOMETRY_DRIVE_SIGN = -1.0;
+    private static final double ODOMETRY_DRIVE_SIGN = 1.0;
 
 
     private final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;

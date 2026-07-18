@@ -248,15 +248,14 @@ public class RobotContainer {
         Command autoShootDepot = shooter.runAutoShoot(this::getAutoShootDistanceFeet)
                 .withTimeout(AUTO_SHOOT_NAMED_SECONDS_DEPOT)
                 .finallyDo(interrupted -> shooter.stop());
-        Command autoAim = AkitDriveCommands.joystickDriveWithAim(
-        drive,
-        () -> 0.0,
-         () -> 0.0,
-         () -> 0.0,
-         () -> true,
-         () -> true,
-         getAllianceAimTarget()
-        ).withTimeout(1);
+        // Command autoAim = AkitDriveCommands.joystickDriveWithAim(
+        // drive,
+        // () -> 0.0,
+        //  () -> 0.0,
+        //  () -> 0.0,
+        //  () -> true,
+        //  getAllianceAimTarget()
+        // ).withTimeout(1);
                 
                 
                         
@@ -266,7 +265,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("AutoIntake", autoIntake);
         NamedCommands.registerCommand("AutoArmDown", autoArmDown);
         NamedCommands.registerCommand("AutoShoot", autoShoot);
-         NamedCommands.registerCommand("AutoAim", autoAim);
+        // NamedCommands.registerCommand("AutoAim", autoAim);
          NamedCommands.registerCommand("autoShootDepot", autoShootDepot);
         
 
@@ -413,22 +412,15 @@ public class RobotContainer {
     }
 
     private void configureButtonBindings() {
-        if (DRIVE_ENABLED) {
-            // Default command: field-relative drive; LT = aim at target (right stick
-            // disabled while aiming)
-            drive.setDefaultCommand(
-                    AkitDriveCommands.joystickDriveWithAim(
-                            drive,
-                            () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
-                            () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
-                            () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
-                            () -> useFieldRelative,
-                            () -> controller.getLeftTriggerAxis() > AIM_TRIGGER_THRESHOLD,
-                            getAllianceAimTarget()));
-        } else {
-            // Temporary drive disable for testing other mechanisms.
-            drive.setDefaultCommand(Commands.run(drive::stop, drive));
-        }
+        drive.setDefaultCommand(
+    AkitDriveCommands.joystickDriveWithAim(
+        drive,
+        () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
+        () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
+        () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
+        () -> controller.getLeftTriggerAxis() > 0.25,
+        this::getAllianceAimTarget
+    ));
 
         // Toggle drive controls inversion with X
         controller.x().onTrue(
