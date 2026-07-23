@@ -23,9 +23,6 @@ public class Shooter extends SubsystemBase {
     private double target3InchRpm = 0.0;
     private double targetNeoPercent = 0.0;
     private double targetRollerPercent = 0.0;
-    private double autoDistanceFeet = 0.0;
-    private double autoTwoInchRpm = 0.0;
-    private double autoThreeInchRpm = 0.0;
     private boolean enabled = false;
 
 
@@ -125,12 +122,9 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setAutoTargetsFromDistanceFeet(double distanceFeet) {
-        autoDistanceFeet = distanceFeet;
-        autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
-        autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
         setTargets(
-                autoTwoInchRpm,
-                autoThreeInchRpm,
+                ShooterAutoMap.getTwoInchRpm(distanceFeet),
+                ShooterAutoMap.getThreeInchRpm(distanceFeet),
                 ShooterConstants.NEO_550_SPEED_PERCENT,
                 ShooterConstants.ROLLER_SPEED_PERCENT);
     }
@@ -148,12 +142,9 @@ public class Shooter extends SubsystemBase {
 }
 
     public void stageAutoTargetsFromDistanceFeet(double distanceFeet) {
-        autoDistanceFeet = distanceFeet;
-        autoTwoInchRpm = ShooterAutoMap.getTwoInchRpm(distanceFeet);
-        autoThreeInchRpm = ShooterAutoMap.getThreeInchRpm(distanceFeet);
         setTargets(
-                autoTwoInchRpm,
-                autoThreeInchRpm,
+                ShooterAutoMap.getTwoInchRpm(distanceFeet),
+                ShooterAutoMap.getThreeInchRpm(distanceFeet),
                 0.0,
                 0.0);
     }
@@ -230,10 +221,6 @@ public void stopRollers() {
         Logger.recordOutput("Shooter/Target3InchRPM", target3InchRpm);
         Logger.recordOutput("Shooter/TargetNeoPercent", targetNeoPercent);
         Logger.recordOutput("Shooter/TargetRollerPercent", targetRollerPercent);
-        Logger.recordOutput("Shooter/AutoDistanceFeet", autoDistanceFeet);
-        Logger.recordOutput("Shooter/Auto2InchRPM", autoTwoInchRpm);
-        Logger.recordOutput("Shooter/Auto3InchRPM", autoThreeInchRpm);
     }
 }
-
 

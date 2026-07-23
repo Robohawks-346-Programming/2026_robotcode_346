@@ -69,7 +69,6 @@ public class RobotContainer {
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
     private static final double AIM_TRIGGER_THRESHOLD = 0.25;
     private static final double MOVING_SHOT_TRANSLATION_INPUT_LIMIT = 0.75;
-    private static final double MOVING_SHOT_AIM_TOLERANCE_DEGREES = 2.0;
     public static final double AUTO_SHOOT_NAMED_SECONDS = 11.0;
     public static final double AUTO_SHOOT_NAMED_SECONDS_DEPOT = 5.0;
     private boolean useFieldRelative = true;
@@ -365,12 +364,6 @@ public class RobotContainer {
         return getMovingShotResult().effectiveDistanceFeet();
     }
 
-    private double getMovingShotAimErrorDegrees() {
-        return getMovingShotTargetHeading()
-                .minus(drive.getRotation())
-                .getDegrees();
-    }
-
     private boolean isMovingShotReadyToFeed() {
         return getMovingShotResult().simulation().shouldMake()
                 && shooter.atVelocitySetpoint();
@@ -395,33 +388,8 @@ public class RobotContainer {
         return Math.max(-MOVING_SHOT_TRANSLATION_INPUT_LIMIT, Math.min(MOVING_SHOT_TRANSLATION_INPUT_LIMIT, input));
     }
 
-    private void logMovingShotSimulation() {
-        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
-        MovingShotCalculator.ShotSimulation simulation = result.simulation();
-        Translation2d driveAimTarget = getMovingShotDriveAimTarget();
-        double desiredHeadingDegrees = driveAimTarget
-                .minus(drive.getPose().getTranslation())
-                .getAngle()
-                .getDegrees();
-
-        Logger.recordOutput("MovingShot/Active", isMovingShotLockActive());
-        Logger.recordOutput("MovingShot/DriveAimTarget", driveAimTarget);
-        Logger.recordOutput("MovingShot/DesiredHeadingDegrees", desiredHeadingDegrees);
-        Logger.recordOutput("MovingShot/CurrentHeadingDegrees", drive.getRotation().getDegrees());
-        Logger.recordOutput("MovingShot/AimErrorDegrees", getMovingShotAimErrorDegrees());
-        Logger.recordOutput("MovingShot/ReadyToFeed", isMovingShotReadyToFeed());
-        Logger.recordOutput("MovingShot/ShouldMake", simulation.shouldMake());
-        Logger.recordOutput("MovingShot/ActualDistanceFeet", result.actualDistanceFeet());
-        Logger.recordOutput("MovingShot/EffectiveDistanceFeet", result.effectiveDistanceFeet());
-        Logger.recordOutput("MovingShot/CompensationTimeSeconds", result.timeOfFlightSeconds());
-        Logger.recordOutput("MovingShot/BallCenterHeightAtHubFeet", simulation.ballCenterHeightAtHubFeet());
-        Logger.recordOutput("MovingShot/RequiredCenterHeightFeet", simulation.requiredCenterHeightFeet());
-        Logger.recordOutput("MovingShot/HorizontalMissFeet", simulation.horizontalMissFeet());
-        Logger.recordOutput("MovingShot/AllowedHorizontalMissFeet", simulation.allowedHorizontalMissFeet());
-        Logger.recordOutput("MovingShot/FallingEntryTimeSeconds", simulation.fallingEntryTimeSeconds());
-        Logger.recordOutput("MovingShot/TwoInchRpm", result.twoInchRpm());
-        Logger.recordOutput("MovingShot/ThreeInchRpm", result.threeInchRpm());
-        Logger.recordOutput("MovingShot/Trajectory", simulation.trajectory());
+    private void logMovingShotTrajectory() {
+        Logger.recordOutput("MovingShot/Trajectory", getMovingShotResult().simulation().trajectory());
     }
 
     // for auto shooting
@@ -627,7 +595,7 @@ public class RobotContainer {
     }
 
     public void robotPeriodic() {
-        logMovingShotSimulation();
+        logMovingShotTrajectory();
     }
 
     public Drive getDrive() {

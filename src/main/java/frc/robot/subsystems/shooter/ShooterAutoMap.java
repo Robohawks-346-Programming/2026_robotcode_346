@@ -6,7 +6,6 @@ package frc.robot.subsystems.shooter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.ToDoubleFunction;
-import org.littletonrobotics.junction.Logger;
 
 
 
@@ -114,14 +113,12 @@ public final class ShooterAutoMap {
 
 
     public static double getDistanceFeet(Pose2d robotPose, Translation2d targetTranslation, double offset) {
-            Logger.recordOutput("Shooter offset", offset);
             Transform2d SHOOTER_CENTER_FROM_ROBOT_CENTER = new Transform2d(
             new Translation2d(-Units.inchesToMeters(6.261 +offset), 0.0),
             new Rotation2d());
         Translation2d shooterTranslation = robotPose
                 .transformBy(SHOOTER_CENTER_FROM_ROBOT_CENTER)
                 .getTranslation();
-        Logger.recordOutput("Distance hub", Units.metersToFeet(shooterTranslation.getDistance(targetTranslation)));
         return Units.metersToFeet(shooterTranslation.getDistance(targetTranslation));
     }
 
@@ -173,7 +170,6 @@ public final class ShooterAutoMap {
         return selector.applyAsDouble(a) + t * (selector.applyAsDouble(b) - selector.applyAsDouble(a));
     }
 }
-
 
 
 
