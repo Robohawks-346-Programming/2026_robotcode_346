@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 
@@ -172,6 +173,24 @@ public class Shooter extends SubsystemBase {
     );
 }
 
+    public Command runAutoShootWhenReady(DoubleSupplier distanceFeetSupplier, BooleanSupplier readyToFeedSupplier) {
+        return Commands.sequence(
+                Commands.run(
+                        () -> stageAutoTargetsFromDistanceFeet(distanceFeetSupplier.getAsDouble()),
+                        this)
+                        .withTimeout(ShooterConstants.SHOOT_DELAY_SECONDS),
+                Commands.run(
+                        () -> {
+                            double distanceFeet = distanceFeetSupplier.getAsDouble();
+                            if (readyToFeedSupplier.getAsBoolean()) {
+                                setAutoTargetsFromDistanceFeet(distanceFeet);
+                            } else {
+                                stageAutoTargetsFromDistanceFeet(distanceFeet);
+                            }
+                        },
+                        this));
+    }
+
 
     public Command runCoralIntake() {
         return runShoot();
@@ -216,6 +235,5 @@ public void stopRollers() {
         Logger.recordOutput("Shooter/Auto3InchRPM", autoThreeInchRpm);
     }
 }
-
 
 

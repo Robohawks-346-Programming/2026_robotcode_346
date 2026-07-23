@@ -1,10 +1,12 @@
 package frc.robot;
 
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -16,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AkitDriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -42,6 +45,7 @@ import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOReal;
 import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.MovingShotCalculator;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonReal;
@@ -64,6 +68,8 @@ public class RobotContainer {
     private static final double HARD_AUTO_BACK_METERS = 0.26;//hard auto
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
     private static final double AIM_TRIGGER_THRESHOLD = 0.25;
+    private static final double MOVING_SHOT_TRANSLATION_INPUT_LIMIT = 0.75;
+    private static final double MOVING_SHOT_AIM_TOLERANCE_DEGREES = 2.0;
     public static final double AUTO_SHOOT_NAMED_SECONDS = 11.0;
     public static final double AUTO_SHOOT_NAMED_SECONDS_DEPOT = 5.0;
     private boolean useFieldRelative = true;
@@ -78,6 +84,7 @@ public class RobotContainer {
 
     private final CommandXboxController controller;
     private final Joystick operatorControl;
+    private Trigger movingShotButton;
 
     public final JoystickButton BUTTON_1;
     public final JoystickButton BUTTON_2;
@@ -340,6 +347,83 @@ public class RobotContainer {
         return ShooterAutoMap.getDistanceFeet(drive.getPose(), getAllianceAimTarget(),offset);
     }
 
+    private MovingShotCalculator.MovingShotResult getMovingShotResult() {
+        return MovingShotCalculator.calculate(drive.getPose(), getAllianceAimTarget(), drive.getRobotSpeeds());
+    }
+
+    private Rotation2d getMovingShotTargetHeading() {
+        return getMovingShotResult().targetHeading();
+    }
+
+    private Translation2d getMovingShotDriveAimTarget() {
+        Translation2d robotTranslation = drive.getPose().getTranslation();
+        Rotation2d targetHeading = getMovingShotTargetHeading();
+        return robotTranslation.plus(new Translation2d(targetHeading.getCos(), targetHeading.getSin()));
+    }
+
+    private double getMovingShotDistanceFeet() {
+        return getMovingShotResult().effectiveDistanceFeet();
+    }
+
+    private double getMovingShotAimErrorDegrees() {
+        return getMovingShotTargetHeading()
+                .minus(drive.getRotation())
+                .getDegrees();
+    }
+
+    private boolean isMovingShotReadyToFeed() {
+        return getMovingShotResult().simulation().shouldMake()
+                && shooter.atVelocitySetpoint();
+    }
+
+    private boolean isMovingShotLockActive() {
+        return movingShotButton != null && movingShotButton.getAsBoolean();
+    }
+
+    private boolean isAimLockActive() {
+        return controller.getLeftTriggerAxis() > AIM_TRIGGER_THRESHOLD || isMovingShotLockActive();
+    }
+
+    private Translation2d getDriveAimTarget() {
+        return isMovingShotLockActive() ? getMovingShotDriveAimTarget() : getAllianceAimTarget();
+    }
+
+    private double capMovingShotTranslationInput(double input) {
+        if (!isMovingShotLockActive()) {
+            return input;
+        }
+        return Math.max(-MOVING_SHOT_TRANSLATION_INPUT_LIMIT, Math.min(MOVING_SHOT_TRANSLATION_INPUT_LIMIT, input));
+    }
+
+    private void logMovingShotSimulation() {
+        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
+        MovingShotCalculator.ShotSimulation simulation = result.simulation();
+        Translation2d driveAimTarget = getMovingShotDriveAimTarget();
+        double desiredHeadingDegrees = driveAimTarget
+                .minus(drive.getPose().getTranslation())
+                .getAngle()
+                .getDegrees();
+
+        Logger.recordOutput("MovingShot/Active", isMovingShotLockActive());
+        Logger.recordOutput("MovingShot/DriveAimTarget", driveAimTarget);
+        Logger.recordOutput("MovingShot/DesiredHeadingDegrees", desiredHeadingDegrees);
+        Logger.recordOutput("MovingShot/CurrentHeadingDegrees", drive.getRotation().getDegrees());
+        Logger.recordOutput("MovingShot/AimErrorDegrees", getMovingShotAimErrorDegrees());
+        Logger.recordOutput("MovingShot/ReadyToFeed", isMovingShotReadyToFeed());
+        Logger.recordOutput("MovingShot/ShouldMake", simulation.shouldMake());
+        Logger.recordOutput("MovingShot/ActualDistanceFeet", result.actualDistanceFeet());
+        Logger.recordOutput("MovingShot/EffectiveDistanceFeet", result.effectiveDistanceFeet());
+        Logger.recordOutput("MovingShot/CompensationTimeSeconds", result.timeOfFlightSeconds());
+        Logger.recordOutput("MovingShot/BallCenterHeightAtHubFeet", simulation.ballCenterHeightAtHubFeet());
+        Logger.recordOutput("MovingShot/RequiredCenterHeightFeet", simulation.requiredCenterHeightFeet());
+        Logger.recordOutput("MovingShot/HorizontalMissFeet", simulation.horizontalMissFeet());
+        Logger.recordOutput("MovingShot/AllowedHorizontalMissFeet", simulation.allowedHorizontalMissFeet());
+        Logger.recordOutput("MovingShot/FallingEntryTimeSeconds", simulation.fallingEntryTimeSeconds());
+        Logger.recordOutput("MovingShot/TwoInchRpm", result.twoInchRpm());
+        Logger.recordOutput("MovingShot/ThreeInchRpm", result.threeInchRpm());
+        Logger.recordOutput("MovingShot/Trajectory", simulation.trajectory());
+    }
+
     // for auto shooting
     // private Command autoShootMoveCommand() {
     // return Commands.deadline(
@@ -412,14 +496,16 @@ public class RobotContainer {
     }
 
     private void configureButtonBindings() {
+        movingShotButton = controller.leftBumper();
+
         drive.setDefaultCommand(
     AkitDriveCommands.joystickDriveWithAim(
         drive,
-        () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
-        () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
+        () -> capMovingShotTranslationInput(controlsInverted ? -controller.getLeftY() : controller.getLeftY()),
+        () -> capMovingShotTranslationInput(controlsInverted ? -controller.getLeftX() : controller.getLeftX()),
         () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
-        () -> controller.getLeftTriggerAxis() > 0.25,
-        this::getAllianceAimTarget
+        this::isAimLockActive,
+        this::getDriveAimTarget
     ));
 
         // Toggle drive controls inversion with X
@@ -460,7 +546,11 @@ public class RobotContainer {
                 .whileTrue(shooter.runAutoShoot(this::getAutoShootDistanceFeet))
                 .onFalse(shooter.stopCoralIntake());
 
-        // Auto-shoot is on right trigger.
+        movingShotButton
+                .whileTrue(shooter.runAutoShootWhenReady(this::getMovingShotDistanceFeet, this::isMovingShotReadyToFeed))
+                .onFalse(shooter.stopCoralIntake());
+
+        // Stationary auto-shoot is on right bumper. Moving auto-shoot is on left bumper.
 
         // Wheel "X" lock only when LB + RB + LT are all held.
         // leftBumper.and(rightBumper).and(leftTrigger)
@@ -534,6 +624,10 @@ public class RobotContainer {
 
     public void teleopInit() {
         // Teleop initialization if needed
+    }
+
+    public void robotPeriodic() {
+        logMovingShotSimulation();
     }
 
     public Drive getDrive() {
