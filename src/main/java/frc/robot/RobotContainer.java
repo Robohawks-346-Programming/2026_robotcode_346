@@ -109,6 +109,7 @@ public class RobotContainer {
 
     private boolean controlsInverted = false;
         private double offset;
+    private MovingShotCalculator.MovingShotResult cachedMovingShotResult = null;
 
     public RobotContainer() {
         offset = 0;
@@ -347,25 +348,44 @@ public class RobotContainer {
     }
 
     private MovingShotCalculator.MovingShotResult getMovingShotResult() {
-        return MovingShotCalculator.calculate(drive.getPose(), getAllianceAimTarget(), drive.getRobotSpeeds());
+        if (!isMovingShotLockActive()) {
+            return null;
+        }
+        if (cachedMovingShotResult == null) {
+            cachedMovingShotResult = MovingShotCalculator.calculate(
+                    drive.getPose(),
+                    getAllianceAimTarget(),
+                    drive.getRobotSpeeds());
+        }
+        return cachedMovingShotResult;
     }
 
     private Rotation2d getMovingShotTargetHeading() {
-        return getMovingShotResult().targetHeading();
+        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
+        return result != null
+                ? result.targetHeading()
+                : getAllianceAimTarget().minus(drive.getPose().getTranslation()).getAngle();
     }
 
     private Translation2d getMovingShotDriveAimTarget() {
+        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
+        if (result == null) {
+            return getAllianceAimTarget();
+        }
         Translation2d robotTranslation = drive.getPose().getTranslation();
-        Rotation2d targetHeading = getMovingShotTargetHeading();
+        Rotation2d targetHeading = result.targetHeading();
         return robotTranslation.plus(new Translation2d(targetHeading.getCos(), targetHeading.getSin()));
     }
 
     private double getMovingShotDistanceFeet() {
-        return getMovingShotResult().effectiveDistanceFeet();
+        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
+        return result != null ? result.effectiveDistanceFeet() : getAutoShootDistanceFeet();
     }
 
     private boolean isMovingShotReadyToFeed() {
-        return getMovingShotResult().simulation().shouldMake()
+        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
+        return result != null
+                && result.simulation().shouldMake()
                 && shooter.atVelocitySetpoint();
     }
 
@@ -389,7 +409,10 @@ public class RobotContainer {
     }
 
     private void logMovingShotTrajectory() {
-        Logger.recordOutput("MovingShot/Trajectory", getMovingShotResult().simulation().trajectory());
+        MovingShotCalculator.MovingShotResult result = getMovingShotResult();
+        if (result != null) {
+            Logger.recordOutput("MovingShot/Trajectory", result.simulation().trajectory());
+        }
     }
 
     // for auto shooting
@@ -595,7 +618,10 @@ public class RobotContainer {
     }
 
     public void robotPeriodic() {
-        logMovingShotTrajectory();
+        if (isMovingShotLockActive()) {
+            logMovingShotTrajectory();
+        }
+        cachedMovingShotResult = null;
     }
 
     public Drive getDrive() {
