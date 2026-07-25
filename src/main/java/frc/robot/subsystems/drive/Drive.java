@@ -14,7 +14,7 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
-
+import edu.wpi.first.math.util.Units;
 import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
@@ -50,6 +50,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -111,6 +112,20 @@ public class Drive extends SubsystemBase {
         return new Pose3d(getPose());
     }
 
+	private static final Translation2d RED_HUB_TARGET = new Translation2d(11.907, 4.030);
+
+	private static final Translation2d BLUE_HUB_TARGET = new Translation2d(
+        VisionConstants.aprilTagLayout.getFieldLength() - RED_HUB_TARGET.getX(),
+        RED_HUB_TARGET.getY());
+@AutoLogOutput(key = "Drive/DistanceToHubFeet")
+public double getDistanceToHubFeet() {
+    Translation2d hub =
+            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                    ? RED_HUB_TARGET
+                    : BLUE_HUB_TARGET;
+
+    return Units.metersToFeet(getPose().getTranslation().getDistance(hub));
+}
 	public Drive(
 			GyroIO gyroIO,
 			ModuleIO flModuleIO,
@@ -122,7 +137,7 @@ public class Drive extends SubsystemBase {
 		modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
 		modules[2] = new Module(blModuleIO, 2, TunerConstants.BackLeft);
 		modules[3] = new Module(brModuleIO, 3, TunerConstants.BackRight);
-
+ 
 		// Usage reporting for swerve template
 		HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
@@ -178,7 +193,7 @@ public class Drive extends SubsystemBase {
 				module.stop();
 			}
 		}
-
+ 
 		// Log empty setpoint states when disabled
 		if (DriverStation.isDisabled()) {
 			Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});

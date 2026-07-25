@@ -20,7 +20,7 @@ public final class MovingShotCalculator {
     private static final double LAUNCH_HEIGHT_METERS = Units.inchesToMeters(15.9325);
     private static final double FUEL_RADIUS_METERS = Units.inchesToMeters(5.91 / 2.0);
     private static final double HUB_RIM_HEIGHT_METERS = Units.inchesToMeters(72.0);
-    private static final double HUB_OPENING_INSCRIBED_RADIUS_METERS = Units.inchesToMeters(41.7 / 2.0);
+    private static final double HUB_OPENING_INSCRIBED_RADIUS_METERS = Units.inchesToMeters(41.7 / 2.0)-Units.inchesToMeters(1);
     private static final double TARGET_CENTER_HEIGHT_METERS = HUB_RIM_HEIGHT_METERS + FUEL_RADIUS_METERS;
     private static final double EMPIRICAL_SHOT_TIME_SECONDS = 0.967;
     private static final int TRAJECTORY_SAMPLE_COUNT = 25;

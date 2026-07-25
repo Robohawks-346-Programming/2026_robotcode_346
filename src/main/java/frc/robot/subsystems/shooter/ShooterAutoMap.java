@@ -45,11 +45,12 @@ public final class ShooterAutoMap {
 
    
     private static final Marker[] MARKERS = new Marker[] {
-            new Marker(5.0, 2970.0, 4010.0),
-            new Marker(6.0, 3210.0, 4210 ),
-            new Marker(7.0, 3416.0, 4698.0),
-            new Marker(8.0, 3650, 5110),
-            new Marker(9.0, 3970, 5500),
+            new Marker(4.0, 2970.0, 4010.0),
+            new Marker(5.0, 3170.0, 4210.0),
+            new Marker(6.0, 3310.0, 4410 ),
+            new Marker(7.0, 3616.0, 4898.0),
+            new Marker(8.0, 3850, 5310),
+            new Marker(9.0, 4170, 5700),
             new Marker(10.0, 3990, 5650),
             new Marker(11.0, 6000, 6000.0),
            
