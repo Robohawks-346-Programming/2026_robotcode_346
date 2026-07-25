@@ -68,7 +68,7 @@ public class RobotContainer {
     private static final double HARD_AUTO_BACK_METERS = 0.26;//hard auto
     private static final double HARD_AUTO_BACK_SPEED_MPS = 0.5;
     private static final double AIM_TRIGGER_THRESHOLD = 0.25;
-    private static final double MOVING_SHOT_TRANSLATION_INPUT_LIMIT = 0.75;
+    private static final double MOVING_SHOT_TRANSLATION_INPUT_LIMIT = 0.5;
     public static final double AUTO_SHOOT_NAMED_SECONDS = 11.0;
     public static final double AUTO_SHOOT_NAMED_SECONDS_DEPOT = 5.0;
     private boolean useFieldRelative = true;
@@ -385,7 +385,7 @@ public class RobotContainer {
     private boolean isMovingShotReadyToFeed() {
         MovingShotCalculator.MovingShotResult result = getMovingShotResult();
         return result != null
-                && result.simulation().shouldMake()
+                && (result.simulation().shouldMake() || drive.getDistanceToHubFeet() <= 4.95)
                 && shooter.atVelocitySetpoint();
     }
 
@@ -492,9 +492,9 @@ public class RobotContainer {
         drive.setDefaultCommand(
     AkitDriveCommands.joystickDriveWithAim(
         drive,
-        () -> capMovingShotTranslationInput(controlsInverted ? -controller.getLeftY() : controller.getLeftY()),
-        () -> capMovingShotTranslationInput(controlsInverted ? -controller.getLeftX() : controller.getLeftX()),
-        () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
+        () -> capMovingShotTranslationInput( controller.getLeftY()),
+        () -> capMovingShotTranslationInput(controller.getLeftX()),
+        () -> -controller.getRightX() ,
         this::isAimLockActive,
         this::getDriveAimTarget
     ));
