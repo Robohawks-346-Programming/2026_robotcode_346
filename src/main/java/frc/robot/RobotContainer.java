@@ -415,9 +415,9 @@ public class RobotContainer {
         drive.setDefaultCommand(
     AkitDriveCommands.joystickDriveWithAim(
         drive,
-        () -> controlsInverted ? -controller.getLeftY() : controller.getLeftY(),
-        () -> controlsInverted ? -controller.getLeftX() : controller.getLeftX(),
-        () -> controlsInverted ? -controller.getRightX() : controller.getRightX(),
+        () ->  -controller.getLeftY(),
+        () -> -controller.getLeftX(),
+        () -> -controller.getRightX(),
         () -> controller.getLeftTriggerAxis() > 0.25,
         this::getAllianceAimTarget
     ));
