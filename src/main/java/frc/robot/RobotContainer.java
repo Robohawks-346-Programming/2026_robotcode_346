@@ -255,6 +255,11 @@ public class RobotContainer {
         Command autoShootDepot = shooter.runAutoShoot(this::getAutoShootDistanceFeet)
                 .withTimeout(AUTO_SHOOT_NAMED_SECONDS_DEPOT)
                 .finallyDo(interrupted -> shooter.stop());
+        Command autoMovingShot = shooter.runAutoShootWhenReady(
+                this::getAutoMovingShotDistanceFeet,
+                this::isAutoMovingShotReadyToFeed)
+                .withTimeout(AUTO_SHOOT_NAMED_SECONDS)
+                .finallyDo(interrupted -> shooter.stop());
         // Command autoAim = AkitDriveCommands.joystickDriveWithAim(
         // drive,
         // () -> 0.0,
@@ -272,6 +277,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("AutoIntake", autoIntake);
         NamedCommands.registerCommand("AutoArmDown", autoArmDown);
         NamedCommands.registerCommand("AutoShoot", autoShoot);
+        NamedCommands.registerCommand("AutoMovingShot", autoMovingShot);
         // NamedCommands.registerCommand("AutoAim", autoAim);
          NamedCommands.registerCommand("autoShootDepot", autoShootDepot);
         
@@ -283,6 +289,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("armdown", autoArmDown);
         NamedCommands.registerCommand("Shoot", autoShoot);
         NamedCommands.registerCommand("shoot", autoShoot);
+        NamedCommands.registerCommand("MovingShot", autoMovingShot);
+        NamedCommands.registerCommand("movingShot", autoMovingShot);
     }
 
     private Command hardAutoCommand() {
@@ -352,10 +360,7 @@ public class RobotContainer {
             return null;
         }
         if (cachedMovingShotResult == null) {
-            cachedMovingShotResult = MovingShotCalculator.calculate(
-                    drive.getPose(),
-                    getAllianceAimTarget(),
-                    drive.getRobotSpeeds());
+            cachedMovingShotResult = calculateMovingShotResult();
         }
         return cachedMovingShotResult;
     }
@@ -380,6 +385,23 @@ public class RobotContainer {
     private double getMovingShotDistanceFeet() {
         MovingShotCalculator.MovingShotResult result = getMovingShotResult();
         return result != null ? result.effectiveDistanceFeet() : getAutoShootDistanceFeet();
+    }
+
+    private MovingShotCalculator.MovingShotResult calculateMovingShotResult() {
+        return MovingShotCalculator.calculate(
+                drive.getPose(),
+                getAllianceAimTarget(),
+                drive.getRobotSpeeds());
+    }
+
+    private double getAutoMovingShotDistanceFeet() {
+        return calculateMovingShotResult().effectiveDistanceFeet();
+    }
+
+    private boolean isAutoMovingShotReadyToFeed() {
+        MovingShotCalculator.MovingShotResult result = calculateMovingShotResult();
+        return (result.simulation().shouldMake() || drive.getDistanceToHubFeet() <= 4.95)
+                && shooter.atVelocitySetpoint();
     }
 
     private boolean isMovingShotReadyToFeed() {
